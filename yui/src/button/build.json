@@ -1,0 +1,10 @@
+{
+    "name": "moodle-atto_pubchem-button",
+    "builds": {
+        "moodle-atto_pubchem-button": {
+            "jsfiles": [
+                "button.js"
+            ]
+        }
+    }
+}
