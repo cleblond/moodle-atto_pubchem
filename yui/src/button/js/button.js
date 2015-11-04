@@ -46,9 +46,10 @@ var TEMPLATE = '' + '<form class="atto_form">' +
     '<strong>{{get_string "instructions" component}}</strong>' +
     '<table><tr><td><label for="{{elementid}}_{{WIDTHCONTROL}}">{{get_string "search" component}}</label></td>' +
     '<td><input class="{{CSS.WIDTHCONTROL}}" size="60" id="pubchemsearch" name="{{elementid}}_{{WIDTHCONTROL}}"' +
-    'value="{{defaultsearch}}" /></td><td>' +
-    '<button class="{{CSS.INPUTSUBMIT}}">{{get_string "searchbutton" component}}</button></td></tr></table>' +
-    '</div>' + '</form>';
+    'value="{{defaultsearch}}" /></td>' +
+    '<td><button class="{{CSS.INPUTSUBMIT}}">{{get_string "searchbutton" component}}</button></td>' +
+    '<td><button class="pubchem_insert">{{get_string "insertbutton" component}}</button></td>' +
+    '</tr></table></div>' + '</form>';
 Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
     .EditorPlugin, [], {
         _usercontextid: null,
@@ -150,6 +151,8 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             this._form = content;
             this._form.one('.' + CSS.INPUTSUBMIT).on('click', this._getPubChemData,
                 this);
+            this._form.one('.pubchem_insert').on('click', this._getImgURL,
+                this);
             return content;
         },
         _getIframeURL: function() {
@@ -161,6 +164,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
         _uploadFile: function(filedata, recid, filename) {
             var xhr = new XMLHttpRequest();
             var ext = "png";
+            console.log('in uploadFile');
             // file received/failed
             xhr.onreadystatechange = (function() {
                 return function() {
@@ -208,7 +212,120 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             console.log(iframe);
             console.log('HERE');
 
+        },
+
+
+
+        _getImgURL: function(e) {
+            e.preventDefault();
+            console.log('in getImgURL');
+            this.getDialogue({
+                focusAfterHide: null
+            }).hide();
+            var widthcontrol = this._form.one(SELECTORS.WIDTHCONTROL);
+            var newwidth = '';
+            var filename = new Date().getTime();
+            var thefilename = "upfile_" + filename + ".png";
+            var divContent = '';
+            if (!widthcontrol.get('value')) {
+                newwidth = this.get('defaultwidth');
+            } else {
+                newwidth = widthcontrol.get('value');
+            }
+            //var heightcontrol = this._form.one(SELECTORS.HEIGHTCONTROL);
+            var newheight = '';
+            // If no file is there to insert, don't do it.
+            /*if (!heightcontrol.get('value')) {
+                newheight = this.get('defaultheight');
+            } else {
+                newheight = heightcontrol.get('value');
+            }*/
+
+
+            this._uploadFile(imgURL,"1",filename);
+
+
+
+            test(source,thefilename);
+            var referringpage = this;
+            Y.Get.js([this.get('path') + '/gui/gui.nocache.js', this.get(
+                    'path') + '/js/marvinjslauncher.js',
+                   this.get('path') + '/gui/lib/promise-0.1.1.min.js'], function(err) {
+                if (err) {
+                    return;
+                }
+                var marvinController;
+                MarvinJSUtil.getEditor("#" + marvinjsid).then(function(
+                    sketcherInstance) {
+                    marvinController = new MarvinControllerClass(
+                        sketcherInstance);
+                    var exportPromise = marvinController.sketcherInstance
+                        .exportStructure("mrv", null);
+                    exportPromise.then(function(source) {
+                        var imgsettings = {
+                            'carbonLabelVisible': false,
+                            'chiralFlagVisible': true,
+                            'valenceErrorVisible': true,
+                            'lonePairsVisible': true,
+                            'implicitHydrogen': "TERMINAL_AND_HETERO",
+                            'width': newwidth,
+                            'height': newheight
+                        };
+
+                        function test(source,
+                            thefilename) {
+                            var imgURL = marvin
+                                .ImageExporter
+                                .mrvToDataUrl(
+                                    source,
+                                    "image/png",
+                                    imgsettings
+                                );
+                            referringpage._uploadFile(
+                                imgURL,
+                                "1",
+                                filename
+                            );
+                            var wwwroot = M
+                                .cfg.wwwroot;
+                            // It will store in mdl_question with the "@@PLUGINFILE@@/myfile.mp3" for the filepath.
+                            var filesrc =
+                                wwwroot +
+                                '/draftfile.php/' +
+                                referringpage
+                                ._usercontextid +
+                                '/user/draft/' +
+                                referringpage
+                                ._itemid +
+                                '/' +
+                                thefilename;
+                            divContent =
+                                "<img name=\"pict\" src=\"" +
+                                filesrc +
+                                "\" alt=\"MarvinJS PNG\"/>";
+                            referringpage.editor.focus();
+                            referringpage.get('host').insertContentAtFocusPoint(divContent);
+                            referringpage.markUpdated();
+                        }
+                       /* marvin.onReady(function() {
+                            test(source,
+                                thefilename
+                            );
+                        }); */
+                    });
+                });
+                MarvinControllerClass = (function() {
+                    function MarvinControllerClass(
+                        sketcherInstance) {
+                        this.sketcherInstance =
+                            sketcherInstance;
+                    }
+                    return MarvinControllerClass;
+                }());
+            });
         }
+
+
     }, {
         ATTRS: {
             disabled: {
