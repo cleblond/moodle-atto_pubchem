@@ -45,7 +45,7 @@ var TEMPLATE = '' + '<form class="atto_form">' +
     '<div id="{{elementid}}_{{innerform}}" class="mdl-align">' +
     '<strong>{{get_string "instructions" component}}</strong>' +
     '<table><tr><td><label for="{{elementid}}_{{WIDTHCONTROL}}">{{get_string "search" component}}</label></td>' +
-    '<td><input class="{{CSS.WIDTHCONTROL}}" size="60" id="{{elementid}}_{{WIDTHCONTROL}}" name="{{elementid}}_{{WIDTHCONTROL}}"' +
+    '<td><input class="{{CSS.WIDTHCONTROL}}" size="60" id="pubchemsearch" name="{{elementid}}_{{WIDTHCONTROL}}"' +
     'value="{{defaultsearch}}" /></td><td>' +
     '<button class="{{CSS.INPUTSUBMIT}}">{{get_string "searchbutton" component}}</button></td></tr></table>' +
     '</div>' + '</form>';
@@ -99,8 +99,8 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                 width: '768px',
                 focusAfterHide: clickedicon
             });
-            var d = new Date();
-            var marvinjsid = d.getTime();
+            //var d = new Date();
+            //var marvinjsid = d.getTime();
             //var iframe = Y.Node.create('<div>hello World</div>');
 
 
@@ -114,11 +114,11 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             });
             //iframe.setAttribute('src', this._getIframeURL());
             iframe.setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/catechol/PNG');
-            iframe.setAttribute('id', marvinjsid);
+            iframe.setAttribute('id', 'pubchem');
             iframe.setAttribute('data-toolbars', 'reaction');
 
             //append buttons to iframe
-            var buttonform = this._getFormContent(clickedicon, marvinjsid);
+            var buttonform = this._getFormContent(clickedicon);
             var bodycontent = Y.Node.create('<div></div>');
             bodycontent.append(buttonform).append(iframe);
             //bodycontent.append(buttonform);
@@ -135,7 +135,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
          * @return {Node} The content to place in the dialogue.
          * @private
          */
-        _getFormContent: function(clickedicon, marvinjsid) {
+        _getFormContent: function(clickedicon) {
             var template = Y.Handlebars.compile(TEMPLATE),
                 content = Y.Node.create(template({
                     elementid: this.get('host').get('elementid'),
@@ -149,7 +149,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                 }));
             this._form = content;
             this._form.one('.' + CSS.INPUTSUBMIT).on('click', this._getPubChemData,
-                this, marvinjsid);
+                this);
             return content;
         },
         _getIframeURL: function() {
@@ -195,8 +195,17 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             xhr.setRequestHeader("Connection", "close");
             xhr.send(params);
         },
-        _getPubChemData: function(e, marvinjsid) {
+        _getPubChemData: function(e) {
             e.preventDefault();
+
+
+            var pubchemsearchnode = Y.one('#pubchemsearch');
+            var searchtext = pubchemsearchnode.get('value');
+            
+            iframe = Y.one('#pubchem');
+            iframe.setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/PNG');
+            //this._form.one('#pubchem').setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/benzene/PNG');
+            console.log(iframe);
             console.log('HERE');
 
         }
