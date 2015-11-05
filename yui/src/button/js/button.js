@@ -42,9 +42,15 @@ var CSS = {
         HEIGHTCONTROL: '.heightcontrol'
     };
 var TEMPLATE = '' + '<form class="atto_form">' +
-    '<div id="{{elementid}}_{{innerform}}" class="mdl-align">' +
-    '<strong>{{get_string "instructions" component}}</strong>' +
-    '<table><tr><td><label for="{{elementid}}_{{WIDTHCONTROL}}">{{get_string "search" component}}</label></td>' +
+    '<div id="{{elementid}}_{{innerform}}" class="left-align">' +
+    '<strong>{{get_string "instructions" component}}</strong><br>' +
+    '<input type="radio" name="database" id="pubchem" value="pubchem">' +
+    '<label for="pubchem">PubChem   </label>' +
+    '<input type="radio" name="database" id="rcsb" value="rcsb">' +
+    '<label for="rcsb">RCSB PDB</label>' +
+//    '</td><td></td><td></td><td></td></tr>' +
+    '<table>' +
+    '<tr><td><label for="{{elementid}}_{{WIDTHCONTROL}}">{{get_string "search" component}}</label></td>' +
     '<td><input class="pubchemsearch" size="60" id="pubchemsearch" name="pubchemsearch"' +
     'value="{{defaultsearch}}" /></td>' +
     '<td><button class="{{CSS.INPUTSUBMIT}}">{{get_string "searchbutton" component}}</button></td>' +
@@ -230,6 +236,10 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
         _getPubChemData: function(e) {
             e.preventDefault();
 
+            var dbselected = Y.one('[name=database]:checked').get('value');
+            console.log(dbselected);
+            if (dbselected == 'pubchem') { 
+
 
             var pubchemsearchnode = Y.one('#pubchemsearch');
             var searchtext = pubchemsearchnode.get('value');
@@ -237,8 +247,11 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             iframe = Y.one('#pubchem');
             iframe.setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/PNG');
             //this._form.one('#pubchem').setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/benzene/PNG');
-            console.log(iframe);
-            console.log('HERE');
+            //console.log(iframe);
+            console.log('pubchem search');
+            } else {
+            console.log('rcsb  search');
+            }
 
         },
 
@@ -262,6 +275,11 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             host = this.get('host');
 
         e.preventDefault();
+
+
+
+
+
 
         // Check if there are any accessibility issues.
         /*if (this._updateWarning()) {
