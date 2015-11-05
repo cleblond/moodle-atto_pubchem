@@ -45,15 +45,43 @@ var TEMPLATE = '' + '<form class="atto_form">' +
     '<div id="{{elementid}}_{{innerform}}" class="mdl-align">' +
     '<strong>{{get_string "instructions" component}}</strong>' +
     '<table><tr><td><label for="{{elementid}}_{{WIDTHCONTROL}}">{{get_string "search" component}}</label></td>' +
-    '<td><input class="{{CSS.WIDTHCONTROL}}" size="60" id="pubchemsearch" name="{{elementid}}_{{WIDTHCONTROL}}"' +
+    '<td><input class="pubchemsearch" size="60" id="pubchemsearch" name="pubchemsearch"' +
     'value="{{defaultsearch}}" /></td>' +
     '<td><button class="{{CSS.INPUTSUBMIT}}">{{get_string "searchbutton" component}}</button></td>' +
     '<td><button class="pubchem_insert">{{get_string "insertbutton" component}}</button></td>' +
     '</tr></table></div>' + '</form>';
+
+
+        IMAGETEMPLATE = '' +
+            '<img src="{{url}}" alt="{{alt}}" ' +
+                '{{#if width}}width="{{width}}" {{/if}}' +
+                '{{#if height}}height="{{height}}" {{/if}}' +
+                '{{#if presentation}}role="presentation" {{/if}}' +
+                'style="{{alignment}}{{margin}}{{customstyle}}"' +
+                '{{#if classlist}}class="{{classlist}}" {{/if}}' +
+                '{{#if id}}id="{{id}}" {{/if}}' +
+                '/>';
+
+
+
+
 Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
     .EditorPlugin, [], {
         _usercontextid: null,
         _filename: null,
+
+
+    /**
+     * A reference to the currently open form.
+     *
+     * @param _form
+     * @type Node
+     * @private
+     */
+    _form: null,
+
+
+
         /**
          * Initialize the button
          *
@@ -151,7 +179,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             this._form = content;
             this._form.one('.' + CSS.INPUTSUBMIT).on('click', this._getPubChemData,
                 this);
-            this._form.one('.pubchem_insert').on('click', this._getImgURL,
+            this._form.one('.pubchem_insert').on('click', this._setImage,
                 this);
             return content;
         },
@@ -214,7 +242,89 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 
         },
 
+    _setImage: function(e) {
+        var form = this._form,
+            //url = form.one('.' + CSS.INPUTURL).get('value'),
+            searchtext = form.one('.pubchemsearch').get('value'),
+            url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/PNG'
+            alt = searchtext,
+            //width = form.one('.' + CSS.INPUTWIDTH).get('value'),
+            //height = form.one('.' + CSS.INPUTHEIGHT).get('value'),
+            //alignment = form.one('.' + CSS.INPUTALIGNMENT).get('value'),
+            margin = '',
+            //presentation = form.one('.' + CSS.IMAGEPRESENTATION).get('checked'),
+            //constrain = form.one('.' + CSS.INPUTCONSTRAIN).get('checked'),
+            //imagehtml,
+            customstyle = '',
+            //i,
+            //css,
+            classlist = [],
+            host = this.get('host');
 
+        e.preventDefault();
+
+        // Check if there are any accessibility issues.
+        /*if (this._updateWarning()) {
+            return;
+        }*/
+
+        // Focus on the editor in preparation for inserting the image.
+        host.focus();
+        if (url !== '') {
+            /*if (this._selectedImage) {
+                host.setSelection(host.getSelectionFromNode(this._selectedImage));
+            } else {
+                host.setSelection(this._currentSelection);
+            }*/
+
+            /*if (alignment === 'style:customstyle;') {
+                alignment = '';
+                customstyle = form.one('.' + CSS.INPUTCUSTOMSTYLE).get('value');
+            } else {
+                for (i in ALIGNMENTS) {
+                    css = ALIGNMENTS[i].value + ':' + ALIGNMENTS[i].name + ';';
+                    if (alignment === css) {
+                        margin = ' margin: ' + ALIGNMENTS[i].margin + ';';
+                    }
+                }
+            }*/
+
+            /*if (constrain) {
+                classlist.push(CSS.RESPONSIVE);
+            }*/
+
+            /*if (!width.match(REGEX.ISPERCENT) && isNaN(parseInt(width, 10))) {
+                form.one('.' + CSS.INPUTWIDTH).focus();
+                return;
+            }
+            if (!height.match(REGEX.ISPERCENT) && isNaN(parseInt(height, 10))) {
+                form.one('.' + CSS.INPUTHEIGHT).focus();
+                return;
+            }*/
+
+            var template = Y.Handlebars.compile(IMAGETEMPLATE);
+            imagehtml = template({
+                url: url,
+                alt: alt,
+               // width: width,
+               // height: height,
+               // presentation: presentation,
+               // alignment: alignment,
+                margin: margin,
+                customstyle: customstyle,
+                classlist: classlist.join(' ')
+            });
+
+            this.get('host').insertContentAtFocusPoint(imagehtml);
+
+            this.markUpdated();
+        }
+
+        this.getDialogue({
+            focusAfterHide: null
+        }).hide();
+
+    },
 
         _getImgURL: function(e) {
             e.preventDefault();
