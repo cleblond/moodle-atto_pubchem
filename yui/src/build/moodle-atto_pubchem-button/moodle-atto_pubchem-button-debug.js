@@ -38,11 +38,15 @@ var CSS = {
         INPUTCANCEL: 'atto_media_urlentrycancel',
         WIDTHCONTROL: 'widthcontrol',
         HEIGHTCONTROL: 'heightcontrol'
+    },
+    SELECTORS = {
+        WIDTHCONTROL: '.widthcontrol',
+        HEIGHTCONTROL: '.heightcontrol'
     };
 var TEMPLATE = '' + '<form class="atto_form">' +
     '<div id="{{elementid}}_{{innerform}}" class="left-align">' +
     '<strong>{{get_string "instructions" component}}</strong><br>' +
-    '<input type="radio" name="database" id="pubchem" value="pubchem" checked="checked">' +
+    '<input type="radio" name="database" id="pubchem" value="pubchem">' +
     '<label for="pubchem">PubChem   </label>' +
     '<input type="radio" name="database" id="rcsb" value="rcsb">' +
     '<label for="rcsb">RCSB PDB</label>' +
@@ -56,7 +60,7 @@ var TEMPLATE = '' + '<form class="atto_form">' +
     '</tr></table></div>' + '</form>';
 
 
-        var IMAGETEMPLATE = '' +
+        IMAGETEMPLATE = '' +
             '<img src="{{url}}" alt="{{alt}}" ' +
                 '{{#if width}}width="{{width}}" {{/if}}' +
                 '{{#if height}}height="{{height}}" {{/if}}' +
@@ -147,7 +151,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             });
             //iframe.setAttribute('src', this._getIframeURL());
             iframe.setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/catechol/PNG');
-            iframe.setAttribute('id', 'pubchemiframe');
+            iframe.setAttribute('id', 'pubchem');
             iframe.setAttribute('data-toolbars', 'reaction');
 
             //append buttons to iframe
@@ -181,40 +185,73 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                     clickedicon: clickedicon
                 }));
             this._form = content;
-            this._form.one('.' + CSS.INPUTSUBMIT).on('click', this._getPubChemData,this);
-            this._form.one('.pubchem_insert').on('click', this._setImage,this);
+            this._form.one('.' + CSS.INPUTSUBMIT).on('click', this._getPubChemData,
+                this);
+            this._form.one('.pubchem_insert').on('click', this._setImage,
+                this);
             return content;
         },
+        _getIframeURL: function() {
 
+            srchtml = '<html>Hello World<hthml>';
+
+            return this.get('path') + '/editor.html';
+        },
+        _uploadFile: function(filedata, recid, filename) {
+            var xhr = new XMLHttpRequest();
+            var ext = "png";
+            console.log('in uploadFile');
+            // file received/failed
+            xhr.onreadystatechange = (function() {
+                return function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            var resp = xhr.responseText;
+                            var start = resp.indexOf(
+                                "success<error>");
+                            if (start < 1) {
+                                return;
+                            }
+                        }
+                    }
+                };
+            })(this);
+            var params = "datatype=uploadfile";
+            params += "&paramone=" + encodeURIComponent(filedata);
+            params += "&paramtwo=" + ext;
+            params += "&paramthree=image";
+            params += "&requestid=" + filename;
+            params += "&contextid=" + this._usercontextid;
+            params += "&component=user";
+            params += "&filearea=draft";
+            params += "&itemid=" + this._itemid;
+            xhr.open("POST", M.cfg.wwwroot +
+                "/lib/editor/atto/plugins/pubchem/pubchemfilelib.php",
+                true);
+            xhr.setRequestHeader("Content-Type",
+                "application/x-www-form-urlencoded");
+            xhr.setRequestHeader("Cache-Control", "no-cache");
+            xhr.setRequestHeader("Content-length", params.length);
+            xhr.setRequestHeader("Connection", "close");
+            xhr.send(params);
+        },
         _getPubChemData: function(e) {
             e.preventDefault();
 
             var dbselected = Y.one('[name=database]:checked').get('value');
             console.log(dbselected);
 
+            if (dbselected == 'pubchem') { 
             var pubchemsearchnode = Y.one('#pubchemsearch');
             var searchtext = pubchemsearchnode.get('value');
-            var iframe = Y.one('#pubchemiframe');
-
-            if (dbselected == 'pubchem') {
-                console.log(searchtext);
-
-                console.log(iframe);
-                iframe.setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/PNG');
-                //this._form.one('#pubchem').setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/benzene/PNG');
-                //console.log(iframe);
-                console.log('pubchem search');
+            console.log(searchtext);
+            iframe = Y.one('#pubchem');
+            iframe.setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/PNG');
+            //this._form.one('#pubchem').setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/benzene/PNG');
+            //console.log(iframe);
+            console.log('pubchem search');
             } else {
-                var linkhtml = '<a href="http://www.rcsb.org/pdb/files/'+ searchtext  +'.pdb.gz">' + searchtext + '</a>';
-                //var bodyNode = Y.one(document.body);
-                //bodyNode.append(linkhtml); 
-//                iframe.body.set('innerHTML', linkhtml);    
-                //console.log('rcsb  search');
-                iframe.insert('src', '');
-                //var iframe = document.getElementById('pubchemiframe'),
-                //iframedoc = iframe.contentDocument || iframe.contentWindow.document;
-                //iframe.innerHTML = linkhtml;
-
+            console.log('rcsb  search');
             }
 
         },
@@ -223,7 +260,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
         var form = this._form,
             //url = form.one('.' + CSS.INPUTURL).get('value'),
             searchtext = form.one('.pubchemsearch').get('value'),
-            url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/PNG';
+            url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/PNG'
             alt = searchtext,
             //width = form.one('.' + CSS.INPUTWIDTH).get('value'),
             //height = form.one('.' + CSS.INPUTHEIGHT).get('value'),
@@ -240,9 +277,49 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 
         e.preventDefault();
 
+
+
+
+
+
+        // Check if there are any accessibility issues.
+        /*if (this._updateWarning()) {
+            return;
+        }*/
+
         // Focus on the editor in preparation for inserting the image.
         host.focus();
         if (url !== '') {
+            /*if (this._selectedImage) {
+                host.setSelection(host.getSelectionFromNode(this._selectedImage));
+            } else {
+                host.setSelection(this._currentSelection);
+            }*/
+
+            /*if (alignment === 'style:customstyle;') {
+                alignment = '';
+                customstyle = form.one('.' + CSS.INPUTCUSTOMSTYLE).get('value');
+            } else {
+                for (i in ALIGNMENTS) {
+                    css = ALIGNMENTS[i].value + ':' + ALIGNMENTS[i].name + ';';
+                    if (alignment === css) {
+                        margin = ' margin: ' + ALIGNMENTS[i].margin + ';';
+                    }
+                }
+            }*/
+
+            /*if (constrain) {
+                classlist.push(CSS.RESPONSIVE);
+            }*/
+
+            /*if (!width.match(REGEX.ISPERCENT) && isNaN(parseInt(width, 10))) {
+                form.one('.' + CSS.INPUTWIDTH).focus();
+                return;
+            }
+            if (!height.match(REGEX.ISPERCENT) && isNaN(parseInt(height, 10))) {
+                form.one('.' + CSS.INPUTHEIGHT).focus();
+                return;
+            }*/
 
             var template = Y.Handlebars.compile(IMAGETEMPLATE);
             imagehtml = template({
@@ -267,6 +344,116 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
         }).hide();
 
     },
+
+        _getImgURL: function(e) {
+            e.preventDefault();
+            console.log('in getImgURL');
+            this.getDialogue({
+                focusAfterHide: null
+            }).hide();
+            var widthcontrol = this._form.one(SELECTORS.WIDTHCONTROL);
+            var newwidth = '';
+            var filename = new Date().getTime();
+            var thefilename = "upfile_" + filename + ".png";
+            var divContent = '';
+            if (!widthcontrol.get('value')) {
+                newwidth = this.get('defaultwidth');
+            } else {
+                newwidth = widthcontrol.get('value');
+            }
+            //var heightcontrol = this._form.one(SELECTORS.HEIGHTCONTROL);
+            var newheight = '';
+            // If no file is there to insert, don't do it.
+            /*if (!heightcontrol.get('value')) {
+                newheight = this.get('defaultheight');
+            } else {
+                newheight = heightcontrol.get('value');
+            }*/
+
+
+            this._uploadFile(imgURL,"1",filename);
+
+
+
+            test(source,thefilename);
+            var referringpage = this;
+            Y.Get.js([this.get('path') + '/gui/gui.nocache.js', this.get(
+                    'path') + '/js/marvinjslauncher.js',
+                   this.get('path') + '/gui/lib/promise-0.1.1.min.js'], function(err) {
+                if (err) {
+                    return;
+                }
+                var marvinController;
+                MarvinJSUtil.getEditor("#" + marvinjsid).then(function(
+                    sketcherInstance) {
+                    marvinController = new MarvinControllerClass(
+                        sketcherInstance);
+                    var exportPromise = marvinController.sketcherInstance
+                        .exportStructure("mrv", null);
+                    exportPromise.then(function(source) {
+                        var imgsettings = {
+                            'carbonLabelVisible': false,
+                            'chiralFlagVisible': true,
+                            'valenceErrorVisible': true,
+                            'lonePairsVisible': true,
+                            'implicitHydrogen': "TERMINAL_AND_HETERO",
+                            'width': newwidth,
+                            'height': newheight
+                        };
+
+                        function test(source,
+                            thefilename) {
+                            var imgURL = marvin
+                                .ImageExporter
+                                .mrvToDataUrl(
+                                    source,
+                                    "image/png",
+                                    imgsettings
+                                );
+                            referringpage._uploadFile(
+                                imgURL,
+                                "1",
+                                filename
+                            );
+                            var wwwroot = M
+                                .cfg.wwwroot;
+                            // It will store in mdl_question with the "@@PLUGINFILE@@/myfile.mp3" for the filepath.
+                            var filesrc =
+                                wwwroot +
+                                '/draftfile.php/' +
+                                referringpage
+                                ._usercontextid +
+                                '/user/draft/' +
+                                referringpage
+                                ._itemid +
+                                '/' +
+                                thefilename;
+                            divContent =
+                                "<img name=\"pict\" src=\"" +
+                                filesrc +
+                                "\" alt=\"MarvinJS PNG\"/>";
+                            referringpage.editor.focus();
+                            referringpage.get('host').insertContentAtFocusPoint(divContent);
+                            referringpage.markUpdated();
+                        }
+                       /* marvin.onReady(function() {
+                            test(source,
+                                thefilename
+                            );
+                        }); */
+                    });
+                });
+                MarvinControllerClass = (function() {
+                    function MarvinControllerClass(
+                        sketcherInstance) {
+                        this.sketcherInstance =
+                            sketcherInstance;
+                    }
+                    return MarvinControllerClass;
+                }());
+            });
+        }
+
 
     }, {
         ATTRS: {
