@@ -187,6 +187,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             this._form = content;
             this._form.one('.' + CSS.INPUTSUBMIT).on('click', this._getPubChemData,this);
             this._form.one('.pubchem_insert').on('click', this._setImage,this);
+            this._form.one('.pbdlink').on('click', this._getPDB,this);
             return content;
         },
 
@@ -213,12 +214,11 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             } else {
                 Y.one('#pubchemiframe').hide();
                 Y.one('.rcsb').show();
-                var linkhtml = '<a href="http://www.rcsb.org/pdb/files/'+ searchtext  +'.pdb.gz">' + searchtext + '</a>';
+                //var linkhtml = '<a href="http://www.rcsb.org/pdb/files/'+ searchtext  +'.pdb.gz">' + searchtext + '</a>';
                 //var linkinfo = 
-                var rcsbdiv = Y.one('.rcsbdiv');
-                rcsbdiv.set('innerHTML', linkhtml);
-                rcsbinfo = Y.one('.rcsbinfo');
-                rcsbinfo.set('innerHTML', linkhtml);
+                //var rcsbdiv = Y.one('.rcsbdiv');
+                //rcsbdiv.set('innerHTML', linkhtml);
+                
                 //bodyNode.append(linkhtml); 
 //                iframe.body.set('innerHTML', linkhtml);    
                 //console.log('rcsb  search');
@@ -227,16 +227,20 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                 //iframedoc = iframe.contentDocument || iframe.contentWindow.document;
                 //iframe.innerHTML = linkhtml;
 
-                var xhr = new XMLHttpRequest();
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4) {
+
+
+/*
+                ///Get descritpion for single record
+                var xhrdesc = new XMLHttpRequest();
+                xhrdesc.onreadystatechange = function() {
+                    if (xhrdesc.readyState === 4) {
                        // var placeholder = self.editor.one('#' + uploadid);
-                        if (xhr.status === 200) {
+                        if (xhrdesc.status === 200) {
                             //var result = JSON.parse(xhr.responseText);
-                            var result = xhr.responseText;
+                            var result = xhrdesc.responseXML;
                             console.log(result);
-                            var res = result.split("\n");
-                            console.log(res); 
+                            //var res = result.split("\n");
+                            //console.log(res); 
                             //x = xmlDoc.getElementsByTagName('PDB');
                             var pdbtag = result.getElementsByTagName("PDB");
                             title = pdbtag[0].getAttribute('title');
@@ -246,16 +250,101 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                             console.log(title);
                             
                         } else {
-                            alert(M.util.get_string('servererror', 'moodle'));
-                            if (placeholder) {
-                                placeholder.remove(true);
-                            }
+                            alert('XMLHttpRequest Failed');
+
                         }
                     }
                 };
 
+                xhrdesc.open("GET", 'http://www.rcsb.org/pdb/rest/describePDB?structureId=4hhb', true);
+                xhrdesc.send();
 
-                //rscb query search
+*/
+
+
+                function getTitleforPDBid (pdbid) {
+                var xhrdesc = new XMLHttpRequest();
+                xhrdesc.open("GET", 'http://www.rcsb.org/pdb/rest/describePDB?structureId=' + pdbid, true);
+                xhrdesc.send();
+
+                xhrdesc.onreadystatechange = function() {
+                    if (xhrdesc.readyState === 4) {
+                       // var placeholder = self.editor.one('#' + uploadid);
+                        if (xhrdesc.status === 200) {
+                            //var result = JSON.parse(xhr.responseText);
+                            var result = xhrdesc.responseXML;
+                            console.log(result);
+                            //var res = result.split("\n");
+                            //console.log(res); 
+                            //x = xmlDoc.getElementsByTagName('PDB');
+                            var pdbtag = result.getElementsByTagName("PDB");
+                            title = pdbtag[0].getAttribute('title');
+                          
+
+                            singleresult = '<a class = "pdblink" id = "'+pdbid+'" href="http://www.rcsb.org/pdb/explore.do?structureId='+pdbid+'">'+pdbid+'  </a>'+title+'<br/>';
+
+
+                            rcsbinfo = Y.one('.rcsbinfo');
+                            innerhtml = rcsbinfo.get('innerHTML');  
+                            rcsbinfo.set('innerHTML', innerhtml + singleresult);  
+                            //searchresults += singleresult;
+
+                            //rcsbinfo = Y.one('.rcsbinfo');
+                            //rcsbinfo.set('innerHTML', title);  
+                            //console.log(title);
+                            return title;
+                            
+                        } else {
+                            alert('XMLHttpRequest Failed');
+
+                        }
+                    }
+                 //return title;
+                };
+
+
+                }
+
+
+                ///search by keyords
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                       // var placeholder = self.editor.one('#' + uploadid);
+                        if (xhr.status === 200) {
+                            //var result = JSON.parse(xhr.responseText);
+                            var result = xhr.responseText;
+                            //console.log(result);
+                            var res = result.split("\n");
+
+                            //for (var i=0; i < res.length; i++){
+                            var searchresults = '<div>';
+                            for (var i=0; i < 10; i++){
+                            //console.log(res[i]);
+                            title = getTitleforPDBid(res[i]);
+                            singleresult = '<a href="http://www.rcsb.org/pdb/explore.do?structureId='+res[i]+'">'+res[i]+'  </a>'+title+'<br/>';
+                            searchresults += singleresult;
+                            //console.log(title);
+                            }
+                            searchresults += '</div>';
+                            console.log(searchresults); 
+                            //x = xmlDoc.getElementsByTagName('PDB');
+                            //var pdbtag = result.getElementsByTagName("PDB");
+                            //title = pdbtag[0].getAttribute('title');
+                          
+                            //rcsbinfo = Y.one('.rcsbinfo');
+                            //rcsbinfo.set('innerHTML', searchresults);  
+
+                            //rcsbinfo = Y.one('.rcsbinfo');
+                            //rcsbinfo.set('innerHTML', linkhtml);
+                            //console.log(title);
+                            
+                        } else {
+                            alert('XMLHttpRequest Failed');
+
+                        }
+                    }
+                };
 			  querytext = '<orgPdbQuery>' +
 			    '<version>head</version>' +
 			    '<queryType>org.pdb.query.simple.AdvancedKeywordQuery</queryType>' +
@@ -271,9 +360,38 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                 xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                 xhr.send(querytext);
 
-//works
-       //         xhr.open("GET", 'http://www.rcsb.org/pdb/rest/describePDB?structureId=4hhb', true);
-        //        xhr.send();
+
+
+
+               
+
+
+
+/*
+                //ajax yui version
+			 var uri = "http://www.rcsb.org/pdb/rest/describePDB?structureId=4hhb";
+
+			    // Define a function to handle the response data.
+			    function complete(id, o, args) {
+				var id = id; // Transaction ID.
+				var data = o.responseXML; // Response data.
+				var args = args[0]; // 'ipsum'.
+			    };
+
+			    // Subscribe to event "io:complete", and pass an array
+			    // as an argument to the event handler "complete", since
+			    // "complete" is global.   At this point in the transaction
+			    // lifecycle, success or failure is not yet known.
+			    Y.on('io:complete', complete, Y, ['lorem']);
+
+			    // Make an HTTP request to 'get.php'.
+			    // NOTE: This transaction does not use a configuration object.
+			    //var request = Y.io(uri);
+                            //console.log(request);
+
+*/
+
+             
 
                 //iframe.setAttribute('src', ' ');
 
@@ -292,6 +410,15 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 
 
         },
+
+
+    _setImage: function(e) {
+          alert('HERE I AM');
+
+    },
+
+
+
 
     _setImage: function(e) {
         var form = this._form,
