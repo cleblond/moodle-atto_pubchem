@@ -49,11 +49,16 @@ var TEMPLATE = '' + '<form class="atto_form">' +
 //    '</td><td></td><td></td><td></td></tr>' +
     '<table>' +
     '<tr><td><label for="{{elementid}}_{{WIDTHCONTROL}}">{{get_string "search" component}}</label></td>' +
-    '<td><input class="pubchemsearch" size="60" id="pubchemsearch" name="pubchemsearch"' +
+    '<td><input class="search" size="60" id="search" name="search"' +
     'value="{{defaultsearch}}" /></td>' +
     '<td><button class="{{CSS.INPUTSUBMIT}}">{{get_string "searchbutton" component}}</button></td>' +
     '<td><button class="pubchem_insert">{{get_string "insertbutton" component}}</button></td>' +
-    '</tr></table></div>' + '</form>';
+    '</tr></table></div></form>' +
+    '<div class="pubcheminfo"></div>' +
+    '<iframe style="border: none; width: 100%; height: 500px;" id="pubchemiframe" src="https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/catechol/PNG"></iframe>' +
+    '<div class="rcsb">' +
+    '<div class="rcsbinfo"></div>' +
+    '<div class="rcsbdiv"></div></div>';
 
 
         var IMAGETEMPLATE = '' +
@@ -130,6 +135,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                 headerContent: M.util.get_string('dialogtitle',
                     COMPONENTNAME),
                 width: '768px',
+                heigth: '600px',
                 focusAfterHide: clickedicon
             });
             //var d = new Date();
@@ -138,23 +144,23 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 
 
 
-
+/*
             var iframe = Y.Node.create('<iframe></iframe>');
             iframe.setStyles({
                 height: '510px',
                 border: 'none',
                 width: '100%'
-            });
+            });  */
             //iframe.setAttribute('src', this._getIframeURL());
-            iframe.setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/catechol/PNG');
-            iframe.setAttribute('id', 'pubchemiframe');
-            iframe.setAttribute('data-toolbars', 'reaction');
+            //iframe.setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/catechol/PNG');
+            //iframe.setAttribute('id', 'pubchemiframe');
+            //iframe.setAttribute('data-toolbars', 'reaction');
 
             //append buttons to iframe
             var buttonform = this._getFormContent(clickedicon);
             var bodycontent = Y.Node.create('<div></div>');
-            bodycontent.append(buttonform).append(iframe);
-            //bodycontent.append(buttonform);
+            //bodycontent.append(buttonform).append(iframe);
+            bodycontent.append(buttonform);
             //set to bodycontent
             dialogue.set('bodyContent', bodycontent);
             dialogue.show();
@@ -192,11 +198,13 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             var dbselected = Y.one('[name=database]:checked').get('value');
             console.log(dbselected);
 
-            var pubchemsearchnode = Y.one('#pubchemsearch');
+            var pubchemsearchnode = Y.one('#search');
             var searchtext = pubchemsearchnode.get('value');
             var iframe = Y.one('#pubchemiframe');
 
             if (dbselected == 'pubchem') {
+                Y.one('#pubchemiframe').show();
+                Y.one('.rcsb').hide();
                 console.log(searchtext);
 
                 console.log(iframe);
@@ -205,24 +213,92 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                 //console.log(iframe);
                 console.log('pubchem search');
             } else {
+                Y.one('#pubchemiframe').hide();
+                Y.one('.rcsb').show();
                 var linkhtml = '<a href="http://www.rcsb.org/pdb/files/'+ searchtext  +'.pdb.gz">' + searchtext + '</a>';
-                //var bodyNode = Y.one(document.body);
+                //var linkinfo = 
+                var rcsbdiv = Y.one('.rcsbdiv');
+                rcsbdiv.set('innerHTML', linkhtml);
+                rcsbinfo = Y.one('.rcsbinfo');
+                rcsbinfo.set('innerHTML', linkhtml);
                 //bodyNode.append(linkhtml); 
 //                iframe.body.set('innerHTML', linkhtml);    
                 //console.log('rcsb  search');
-                iframe.insert('src', '');
+                //iframe.insert('src', '');
                 //var iframe = document.getElementById('pubchemiframe'),
                 //iframedoc = iframe.contentDocument || iframe.contentWindow.document;
                 //iframe.innerHTML = linkhtml;
 
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                       // var placeholder = self.editor.one('#' + uploadid);
+                        if (xhr.status === 200) {
+                            //var result = JSON.parse(xhr.responseText);
+                            var result = xhr.responseText;
+                            console.log(result);
+                            var res = result.split("\n");
+                            console.log(res); 
+                            //x = xmlDoc.getElementsByTagName('PDB');
+                            var pdbtag = result.getElementsByTagName("PDB");
+                            title = pdbtag[0].getAttribute('title');
+                          
+                            rcsbinfo = Y.one('.rcsbinfo');
+                            rcsbinfo.set('innerHTML', title);  
+                            console.log(title);
+                            
+                        } else {
+                            alert(M.util.get_string('servererror', 'moodle'));
+                            if (placeholder) {
+                                placeholder.remove(true);
+                            }
+                        }
+                    }
+                };
+
+
+                //rscb query search
+			  querytext = '<orgPdbQuery>' +
+			    '<version>head</version>' +
+			    '<queryType>org.pdb.query.simple.AdvancedKeywordQuery</queryType>' +
+			    '<description>Text Search for: chymotrypsin</description>' +
+			    '<queryId>57ADC790</queryId>' +
+			    '<resultCount>594</resultCount>' +
+			    '<runtimeStart>2015-11-06T01:16:49Z</runtimeStart>' +
+			    '<runtimeMilliseconds>34</runtimeMilliseconds>' +
+			    '<keywords>Chymotrypsin</keywords>' +
+			  '</orgPdbQuery>';
+
+                xhr.open("POST", "http://www.rcsb.org/pdb/rest/search", true);
+                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                xhr.send(querytext);
+
+//works
+       //         xhr.open("GET", 'http://www.rcsb.org/pdb/rest/describePDB?structureId=4hhb', true);
+        //        xhr.send();
+
+                //iframe.setAttribute('src', ' ');
+
             }
+
+
+
+
+                
+
+                
+
+              //  xhr.open("GET", 'http://www.rcsb.org/pdb/rest/describePDB?structureId=450D', true);
+              //  xhr.send();
+
+
 
         },
 
     _setImage: function(e) {
         var form = this._form,
             //url = form.one('.' + CSS.INPUTURL).get('value'),
-            searchtext = form.one('.pubchemsearch').get('value'),
+            searchtext = Y.one('.search').get('value'),
             url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/PNG';
             alt = searchtext,
             //width = form.one('.' + CSS.INPUTWIDTH).get('value'),

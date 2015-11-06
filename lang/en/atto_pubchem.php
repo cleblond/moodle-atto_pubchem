@@ -36,5 +36,5 @@ $string['insertbutton'] = 'Insert';
 $string['cancel'] = 'Cancel';
 $string['search'] = 'Search';
 $string['height'] = 'Height (px)';
-$string['instructions'] = 'Build your pubchem and then click "Insert Image"';
+$string['instructions'] = 'Search PubChem for structure name or RCSB by PDB id"';
 $string['defaultflavor'] = 'Default Ice Cream Flavor';
