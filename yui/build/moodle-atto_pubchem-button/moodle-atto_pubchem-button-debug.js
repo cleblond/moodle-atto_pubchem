@@ -46,19 +46,25 @@ var TEMPLATE = '' + '<form class="atto_form">' +
     '<label for="pubchem">PubChem   </label>' +
     '<input type="radio" name="database" id="rcsb" value="rcsb">' +
     '<label for="rcsb">RCSB PDB</label>' +
-//    '</td><td></td><td></td><td></td></tr>' +
     '<table>' +
     '<tr><td><label for="{{elementid}}_{{WIDTHCONTROL}}">{{get_string "search" component}}</label></td>' +
     '<td><input class="search" size="60" id="search" name="search"' +
     'value="{{defaultsearch}}" /></td>' +
     '<td><button class="{{CSS.INPUTSUBMIT}}">{{get_string "searchbutton" component}}</button></td>' +
     '<td><button class="pubchem_insert">{{get_string "insertbutton" component}}</button></td>' +
-    '</tr></table></div></form>' +
-    '<div class="pubcheminfo"></div>' +
-    '<iframe style="border: none; width: 100%; height: 500px;" id="pubchemiframe" src="https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/catechol/PNG"></iframe>' +
+    '</tr></table>' +
+    '<input type="radio" name="exact" id="exact" value="yes" checked="checked">' +
+    '<label for="pubchem">Exact match  </label>' +
+    '<input type="radio" name="exact" id="notexact" value="no">' +
+    '<label for="rcsb">Partial match</label>' +
+    '</form>' +
+    '<div style="overflow:auto;" class="pubchem">' +
+    '<div style="max-height: 400px; overflow:auto;" class="pubchemdiv"></div>' +
+    '<div style="max-height: 400px; overflow:auto;" class="pubcheminfo"></div></div>' +
     '<div class="rcsb">' +
-    '<div class="rcsbinfo"></div>' +
-    '<div class="rcsbdiv"></div></div>';
+    '<div style="max-height: 400px; overflow:auto;" class="rcsbdiv"></div>' +
+    '<div style="max-height: 400px; overflow:auto;" class="rcsbinfo"></div></div>' +
+    '</div>';
 
 
         var IMAGETEMPLATE = '' +
@@ -135,26 +141,10 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                 headerContent: M.util.get_string('dialogtitle',
                     COMPONENTNAME),
                 width: '768px',
-                heigth: '600px',
+                height: '600px',
                 focusAfterHide: clickedicon
             });
-            //var d = new Date();
-            //var marvinjsid = d.getTime();
-            //var iframe = Y.Node.create('<div>hello World</div>');
 
-
-
-/*
-            var iframe = Y.Node.create('<iframe></iframe>');
-            iframe.setStyles({
-                height: '510px',
-                border: 'none',
-                width: '100%'
-            });  */
-            //iframe.setAttribute('src', this._getIframeURL());
-            //iframe.setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/catechol/PNG');
-            //iframe.setAttribute('id', 'pubchemiframe');
-            //iframe.setAttribute('data-toolbars', 'reaction');
 
             //append buttons to iframe
             var buttonform = this._getFormContent(clickedicon);
@@ -189,7 +179,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             this._form = content;
             this._form.one('.' + CSS.INPUTSUBMIT).on('click', this._getPubChemData,this);
             this._form.one('.pubchem_insert').on('click', this._setImage,this);
-            this._form.one('.pbdlink').on('click', this._getPDB,this);
+            //this._form.one('.pbdlink').on('click', this._getPDB,this);
             return content;
         },
 
@@ -197,72 +187,107 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             e.preventDefault();
 
             var dbselected = Y.one('[name=database]:checked').get('value');
-            console.log(dbselected);
-
+            //console.log(dbselected);
+            
             var pubchemsearchnode = Y.one('#search');
             var searchtext = pubchemsearchnode.get('value');
             var iframe = Y.one('#pubchemiframe');
 
+//////PUBCHEM CODE HERE
             if (dbselected == 'pubchem') {
-                Y.one('#pubchemiframe').show();
+                Y.one('.pubchem').show();
                 Y.one('.rcsb').hide();
-                console.log(searchtext);
+                pubcheminfo = Y.one('.pubcheminfo').set('innerHTML', "");
+                //pubcheminfo.set('innerHTML', "");
+                //Y.one('#pubchemiframe').show();
 
-                console.log(iframe);
-                iframe.setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/PNG');
-                //this._form.one('#pubchem').setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/benzene/PNG');
-                //console.log(iframe);
-                console.log('pubchem search');
-            } else {
-                Y.one('#pubchemiframe').hide();
-                Y.one('.rcsb').show();
-                //var linkhtml = '<a href="http://www.rcsb.org/pdb/files/'+ searchtext  +'.pdb.gz">' + searchtext + '</a>';
-                //var linkinfo = 
-                //var rcsbdiv = Y.one('.rcsbdiv');
-                //rcsbdiv.set('innerHTML', linkhtml);
-                
-                //bodyNode.append(linkhtml); 
-//                iframe.body.set('innerHTML', linkhtml);    
-                //console.log('rcsb  search');
-                //iframe.insert('src', '');
-                //var iframe = document.getElementById('pubchemiframe'),
-                //iframedoc = iframe.contentDocument || iframe.contentWindow.document;
-                //iframe.innerHTML = linkhtml;
+                //console.log(searchtext);
+                //console.log('pubchem search');
 
-
-
-/*
-                ///Get descritpion for single record
+                function getTitleforCID (cid) {
                 var xhrdesc = new XMLHttpRequest();
+                // https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/123/PNG
+
+                //xhrdesc.open("GET", 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/' + cid + '/PNG', true);
+                xhrdesc.open("GET", 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/' + cid + '/record/JSON', true);
+                xhrdesc.send();
+                console.log("in getTitleforCID");
+                //console.log(cid);
                 xhrdesc.onreadystatechange = function() {
                     if (xhrdesc.readyState === 4) {
-                       // var placeholder = self.editor.one('#' + uploadid);
                         if (xhrdesc.status === 200) {
-                            //var result = JSON.parse(xhr.responseText);
-                            var result = xhrdesc.responseXML;
-                            console.log(result);
-                            //var res = result.split("\n");
-                            //console.log(res); 
-                            //x = xmlDoc.getElementsByTagName('PDB');
-                            var pdbtag = result.getElementsByTagName("PDB");
-                            title = pdbtag[0].getAttribute('title');
+                            var result = xhrdesc.responseText;
+                            var jsonresult = JSON.parse(result);
+                            console.log(jsonresult);
+                            console.log(jsonresult.PC_Compounds[0].props[8].value.sval);
+                            preferredname = jsonresult.PC_Compounds[0].props[8].value.sval;
+                            //console.log(result);
+                            //var pdbtag = result.getElementsByTagName("PDB");
+                            //title = pdbtag[0].getAttribute('title');
+                            singleresult = '<img height="200px" width="200px" class = "pcimage" id = "'+cid+'" src="https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/' + cid + '/PNG" ></img><span>'+preferredname+'</span><br/>';
                           
-                            rcsbinfo = Y.one('.rcsbinfo');
-                            rcsbinfo.set('innerHTML', title);  
-                            console.log(title);
+                            pubcheminfo = Y.one('.pubcheminfo');
+                            innerhtml = pubcheminfo.get('innerHTML');  
+                            pubcheminfo.set('innerHTML', innerhtml + singleresult);
+                            //return title;
                             
                         } else {
-                            alert('XMLHttpRequest Failed');
+                            alert('XMLHttpRequest Failed CID');
+
+                        }
+                    }
+
+                };
+
+
+                }
+
+
+                ///search by keywords
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                       // var placeholder = self.editor.one('#' + uploadid);
+                        if (xhr.status === 200) {
+                            //var result = JSON.parse(xhr.responseText);
+                            var result = xhr.responseXML;
+                            var cidtag = result.getElementsByTagName("CID");
+                            //var searchresults = '<div>';
+                            var totalhits = cidtag.length;
+                            var hitstoshow = totalhits > 10 ? 10 : totalhits;
+                            pubchemdiv = Y.one('.pubchemdiv');
+                            //innerhtml = pubchemdiv.get('innerHTML');  
+                            pubchemdiv.set('innerHTML', "<b>"+totalhits+" hits found!</b><br/>")
+                            for (var i=0; i < hitstoshow; i++){
+                            //console.log(cidtag[i]);
+                            cid = cidtag[i].innerHTML;
+                            title = getTitleforCID(cid);
+                            }
+
+                        } else {
+                            alert('XMLHttpRequest Failed CID list');
 
                         }
                     }
                 };
+                //iframe.setAttribute('src', 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/methylenechloride/cids/XML?name_type=word');
 
-                xhrdesc.open("GET", 'http://www.rcsb.org/pdb/rest/describePDB?structureId=4hhb', true);
-                xhrdesc.send();
+                var exactsearch = Y.one('[name=exact]:checked').get('value');
+                if (exactsearch == 'yes') {
+                xhr.open("GET", 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/cids/XML', true);
+                } else {
+                xhr.open("GET", 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/cids/XML?name_type=word', true);
+                }
 
-*/
+                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                xhr.send();
 
+////RCSB CODE HERE
+            } else {
+                Y.one('.pubchem').hide();
+                Y.one('.rcsb').show();
+                rcsbinfo = Y.one('.rcsbinfo');
+                innerhtml = rcsbinfo.set('innerHTML', "");
 
                 function getTitleforPDBid (pdbid) {
                 var xhrdesc = new XMLHttpRequest();
@@ -271,29 +296,15 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 
                 xhrdesc.onreadystatechange = function() {
                     if (xhrdesc.readyState === 4) {
-                       // var placeholder = self.editor.one('#' + uploadid);
                         if (xhrdesc.status === 200) {
-                            //var result = JSON.parse(xhr.responseText);
                             var result = xhrdesc.responseXML;
-                            console.log(result);
-                            //var res = result.split("\n");
-                            //console.log(res); 
-                            //x = xmlDoc.getElementsByTagName('PDB');
+                          //  console.log(result);
                             var pdbtag = result.getElementsByTagName("PDB");
                             title = pdbtag[0].getAttribute('title');
-                          
-
                             singleresult = '<a class = "pdblink" id = "'+pdbid+'" href="http://www.rcsb.org/pdb/explore.do?structureId='+pdbid+'">'+pdbid+'  </a>'+title+'<br/>';
-
-
                             rcsbinfo = Y.one('.rcsbinfo');
                             innerhtml = rcsbinfo.get('innerHTML');  
-                            rcsbinfo.set('innerHTML', innerhtml + singleresult);  
-                            //searchresults += singleresult;
-
-                            //rcsbinfo = Y.one('.rcsbinfo');
-                            //rcsbinfo.set('innerHTML', title);  
-                            //console.log(title);
+                            rcsbinfo.set('innerHTML', innerhtml + singleresult);
                             return title;
                             
                         } else {
@@ -301,14 +312,14 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 
                         }
                     }
-                 //return title;
+
                 };
 
 
                 }
 
 
-                ///search by keyords
+                ///search by keywords
                 var xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = function() {
                     if (xhr.readyState === 4) {
@@ -316,12 +327,18 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                         if (xhr.status === 200) {
                             //var result = JSON.parse(xhr.responseText);
                             var result = xhr.responseText;
-                            //console.log(result);
                             var res = result.split("\n");
 
                             //for (var i=0; i < res.length; i++){
                             var searchresults = '<div>';
-                            for (var i=0; i < 10; i++){
+
+                            var totalhits = res.length;
+                            var hitstoshow = totalhits > 20 ? 20 : totalhits;
+                            rcsbdiv = Y.one('.rcsbdiv');
+                            //innerhtml = rcsbdiv.get('innerHTML');  
+                            rcsbinfo.set('innerHTML', "<b>"+totalhits+" hits found</b><br/>")
+
+                            for (var i=0; i < hitstoshow; i++){
                             //console.log(res[i]);
                             title = getTitleforPDBid(res[i]);
                             singleresult = '<a href="http://www.rcsb.org/pdb/explore.do?structureId='+res[i]+'">'+res[i]+'  </a>'+title+'<br/>';
@@ -329,18 +346,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                             //console.log(title);
                             }
                             searchresults += '</div>';
-                            console.log(searchresults); 
-                            //x = xmlDoc.getElementsByTagName('PDB');
-                            //var pdbtag = result.getElementsByTagName("PDB");
-                            //title = pdbtag[0].getAttribute('title');
-                          
-                            //rcsbinfo = Y.one('.rcsbinfo');
-                            //rcsbinfo.set('innerHTML', searchresults);  
-
-                            //rcsbinfo = Y.one('.rcsbinfo');
-                            //rcsbinfo.set('innerHTML', linkhtml);
-                            //console.log(title);
-                            
+                            //console.log(searchresults);
                         } else {
                             alert('XMLHttpRequest Failed');
 
@@ -352,64 +358,15 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 			    '<queryType>org.pdb.query.simple.AdvancedKeywordQuery</queryType>' +
 			    '<description>Text Search for: chymotrypsin</description>' +
 			    '<queryId>57ADC790</queryId>' +
-			    '<resultCount>594</resultCount>' +
-			    '<runtimeStart>2015-11-06T01:16:49Z</runtimeStart>' +
 			    '<runtimeMilliseconds>34</runtimeMilliseconds>' +
-			    '<keywords>Chymotrypsin</keywords>' +
+			    '<keywords>'+searchtext+'</keywords>' +
 			  '</orgPdbQuery>';
 
                 xhr.open("POST", "http://www.rcsb.org/pdb/rest/search", true);
                 xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                 xhr.send(querytext);
 
-
-
-
-               
-
-
-
-/*
-                //ajax yui version
-			 var uri = "http://www.rcsb.org/pdb/rest/describePDB?structureId=4hhb";
-
-			    // Define a function to handle the response data.
-			    function complete(id, o, args) {
-				var id = id; // Transaction ID.
-				var data = o.responseXML; // Response data.
-				var args = args[0]; // 'ipsum'.
-			    };
-
-			    // Subscribe to event "io:complete", and pass an array
-			    // as an argument to the event handler "complete", since
-			    // "complete" is global.   At this point in the transaction
-			    // lifecycle, success or failure is not yet known.
-			    Y.on('io:complete', complete, Y, ['lorem']);
-
-			    // Make an HTTP request to 'get.php'.
-			    // NOTE: This transaction does not use a configuration object.
-			    //var request = Y.io(uri);
-                            //console.log(request);
-
-*/
-
-             
-
-                //iframe.setAttribute('src', ' ');
-
             }
-
-
-
-
-                
-
-                
-
-              //  xhr.open("GET", 'http://www.rcsb.org/pdb/rest/describePDB?structureId=450D', true);
-              //  xhr.send();
-
-
 
         },
 
