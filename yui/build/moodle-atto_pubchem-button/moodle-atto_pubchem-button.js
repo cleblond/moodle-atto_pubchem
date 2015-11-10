@@ -57,14 +57,14 @@ var TEMPLATE = '' + '<form class="atto_form">' +
     '<label for="pubchem">Exact match  </label>' +
     '<input type="radio" name="exact" id="notexact" value="no">' +
     '<label for="rcsb">Partial match</label>' +
-    '</form>' +
-    '<div style="overflow:auto;" class="pubchem">' +
+    '<div style="overflow:auto;" id="pubchem" class="pubchem">' +
     '<div style="max-height: 400px; overflow:auto;" class="pubchemdiv"></div>' +
-    '<div style="max-height: 400px; overflow:auto;" class="pubcheminfo"></div></div>' +
+    '<ul style="max-height: 400px; overflow:auto;" class="pubcheminfo"></ul></div>' +
     '<div class="rcsb">' +
     '<div style="max-height: 400px; overflow:auto;" class="rcsbdiv"></div>' +
-    '<div style="max-height: 400px; overflow:auto;" class="rcsbinfo"></div></div>' +
-    '</div>';
+    '<ul style="max-height: 400px; overflow:auto;" class="rcsbinfo"></ul></div>' +
+    '</div>' +
+    '</form>';
 
 
         var IMAGETEMPLATE = '' +
@@ -108,11 +108,6 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             this._filename = timestamp;
             var host = this.get('host');
             var options = host.get('filepickeroptions');
-            if (options.image && options.image.itemid) {
-                this._itemid = options.image.itemid;
-            } else {
-                return;
-            }
             // If we don't have the capability to view then give up.
             if (this.get('disabled')) {
                 return;
@@ -176,9 +171,28 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             this._form = content;
             this._form.one('.' + CSS.INPUTSUBMIT).on('click', this._getPubChemData,this);
             this._form.one('.pubchem_insert').on('click', this._setImage,this);
-            //this._form.one('.pbdlink').on('click', this._getPDB,this);
+            //this._form.one('.pubcheminfo').on('click', alert("It worked"),"ul li.pubchemsearchres");
+            this._form.one('.pubcheminfo').on('click', this._doIT,"#pubchem ul li");
+            //this._form.one('.pubcheminfo').delegate('click', this._doIT, '#pubchem', 'ul li a.pubchemsearchres');
+
             return content;
         },
+//
+
+
+
+        _doIT: function(e) {
+            e.preventDefault();
+
+
+        var currentTarget = e.currentTarget; // #container
+        var target = e.target; // #container or a descendant
+
+            console.log(target.get("parentNode").get("id"));
+        //alert("Here");
+        },
+
+
 
         _getPubChemData: function(e) {
             e.preventDefault();
@@ -206,26 +220,32 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                 // https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/123/PNG
 
                 //xhrdesc.open("GET", 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/' + cid + '/PNG', true);
-                xhrdesc.open("GET", 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/' + cid + '/record/JSON', true);
+//                xhrdesc.open("GET", 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/' + cid + '/record/JSON', true);
+                xhrdesc.open("GET", 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/' + cid + '/property/IUPACName,MolecularWeight,MolecularFormula/JSON', true);
                 xhrdesc.send();
                 console.log("in getTitleforCID");
                 //console.log(cid);
                 xhrdesc.onreadystatechange = function() {
                     if (xhrdesc.readyState === 4) {
                         if (xhrdesc.status === 200) {
+
                             var result = xhrdesc.responseText;
                             var jsonresult = JSON.parse(result);
                             console.log(jsonresult);
-                            console.log(jsonresult.PC_Compounds[0].props[8].value.sval);
-                            preferredname = jsonresult.PC_Compounds[0].props[8].value.sval;
+                            console.log(jsonresult.PropertyTable.Properties.IUPACName);
+                            //preferredname = jsonresult.PC_Compounds[0].props[8].value.sval;
+                            preferredname = jsonresult.PropertyTable.Properties.IUPACName;
                             //console.log(result);
                             //var pdbtag = result.getElementsByTagName("PDB");
                             //title = pdbtag[0].getAttribute('title');
-                            singleresult = '<img height="200px" width="200px" class = "pcimage" id = "'+cid+'" src="https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/' + cid + '/PNG" ></img><span>'+preferredname+'</span><br/>';
+                            singleresult = '<li id="'+cid+'"><img style="cursor: pointer; cursor: hand;" height="200px" width="200px" class = "pcimage" src="https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/' + cid + '/PNG" ></img><a class="pubchemsearchres" href="">'+preferredname+'</a></li>';
                           
                             pubcheminfo = Y.one('.pubcheminfo');
                             innerhtml = pubcheminfo.get('innerHTML');  
                             pubcheminfo.set('innerHTML', innerhtml + singleresult);
+                            console.log(cid);
+
+                            //this._form.one('.pubcheminfo').on('click', alert("HHEREREEE"),this);
                             //return title;
                             
                         } else {
@@ -256,9 +276,11 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                             //innerhtml = pubchemdiv.get('innerHTML');  
                             pubchemdiv.set('innerHTML', "<b>"+totalhits+" hits found!</b><br/>")
                             for (var i=0; i < hitstoshow; i++){
+                            
                             //console.log(cidtag[i]);
                             cid = cidtag[i].innerHTML;
                             title = getTitleforCID(cid);
+                                //if ( i == 0 ) {Y.one('.pubchemsearchres').on('click', this._getPDB,this);}
                             }
 
                         } else {
@@ -368,10 +390,10 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
         },
 
 
-    _setImage: function(e) {
-          alert('HERE I AM');
-
-    },
+ //   _setImage: function(e) {
+ //         alert('HERE I AM');
+//
+//    },
 
 
 
@@ -434,7 +456,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                 value: null
             },
             defaultsearch: {
-                value: 'Benzene'
+                value: 'acetonitrile'
             },
             defaultheight: {
                 value: '100'
