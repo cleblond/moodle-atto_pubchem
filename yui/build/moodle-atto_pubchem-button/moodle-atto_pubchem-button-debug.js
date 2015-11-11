@@ -58,8 +58,11 @@ var TEMPLATE = '' + '<form class="atto_form">' +
     '<input type="radio" name="exact" id="notexact" value="no">' +
     '<label for="rcsb">Partial match</label>' +
     '<div style="overflow:auto;" id="pubchem" class="pubchem">' +
-    '<div style="max-height: 400px; overflow:auto;" class="pubchemdiv"></div>' +
-    '<ul style="max-height: 400px; overflow:auto;" class="pubcheminfo"></ul></div>' +
+    '<div id="pubchemoverview" class="pubchemoverview"></div>' +
+    '<div style="max-height: 400px; overflow:auto;" id="pubchemdiv" class="pubchemdiv">' +
+    '<button class="pubchem_searchret">Return</button>' +
+    '</div>' +
+    '<ul style="max-height: 400px; overflow:auto;" id="pubcheminfo" class="pubcheminfo"></ul></div>' +
     '<div class="rcsb">' +
     '<div style="max-height: 400px; overflow:auto;" class="rcsbdiv"></div>' +
     '<ul style="max-height: 400px; overflow:auto;" class="rcsbinfo"></ul></div>' +
@@ -169,10 +172,12 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                     clickedicon: clickedicon
                 }));
             this._form = content;
+            this._form.one('#pubchemdiv').hide();
             this._form.one('.' + CSS.INPUTSUBMIT).on('click', this._getPubChemData,this);
             this._form.one('.pubchem_insert').on('click', this._setImage,this);
             //this._form.one('.pubcheminfo').on('click', alert("It worked"),"ul li.pubchemsearchres");
-            this._form.one('.pubcheminfo').on('click', this._doIT,"#pubchem ul li");
+            this._form.one('.pubcheminfo').on('click', this._viewPCRecord,"#pubchem ul li", this);
+            this._form.one('.pubchem_searchret').on('click', this._PCReturn, this);
             //this._form.one('.pubcheminfo').delegate('click', this._doIT, '#pubchem', 'ul li a.pubchemsearchres');
 
             return content;
@@ -180,15 +185,29 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 //
 
 
+        _PCReturn: function(e) {
+             e.preventDefault()
+             this._form.one('#pubchemdiv').hide();
+             this._form.one('#pubcheminfo').show();
+        },
 
-        _doIT: function(e) {
+        _viewPCRecord: function(e) {
             e.preventDefault();
 
-
+        Y.one('.pubcheminfo').hide();
+        Y.one('#pubchemdiv').show();
         var currentTarget = e.currentTarget; // #container
         var target = e.target; // #container or a descendant
-
-            console.log(target.get("parentNode").get("id"));
+        var id = target.get("parentNode").get("id");
+        //Y.one('#pubchemdiv').get('childNodes').remove();
+        var length = Y.one('#pubchemdiv').get('children').length;
+        console.log(length);
+        if (length > 1) {
+        Y.one('#pubchemdiv').get('children').slice(-1).item(0).remove();
+        }
+        //Y.one('#pubchemdiv').set('innerHTML',Y.one('#'+id));
+        Y.one('#pubchemdiv').insert(Y.one('#'+id).get('innerHTML'));
+            //console.log(target.get("parentNode").get("id"));
         //alert("Here");
         },
 
@@ -234,7 +253,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                             console.log(jsonresult);
                             console.log(jsonresult.PropertyTable.Properties.IUPACName);
                             //preferredname = jsonresult.PC_Compounds[0].props[8].value.sval;
-                            preferredname = jsonresult.PropertyTable.Properties.IUPACName;
+                            preferredname = jsonresult.PropertyTable.Properties[0].IUPACName;
                             //console.log(result);
                             //var pdbtag = result.getElementsByTagName("PDB");
                             //title = pdbtag[0].getAttribute('title');
@@ -271,10 +290,11 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                             var cidtag = result.getElementsByTagName("CID");
                             //var searchresults = '<div>';
                             var totalhits = cidtag.length;
-                            var hitstoshow = totalhits > 10 ? 10 : totalhits;
-                            pubchemdiv = Y.one('.pubchemdiv');
+                            var hitstoshow = totalhits > 3 ? 3 : totalhits;
+                            pubchem = Y.one('.pubchemoverview');
                             //innerhtml = pubchemdiv.get('innerHTML');  
-                            pubchemdiv.set('innerHTML', "<b>"+totalhits+" hits found!</b><br/>")
+                            //Y.one('.pubchem').prepend("<b>"+totalhits+" hits found!</b><br/>");
+                            pubchem.set('innerHTML', "<b>"+totalhits+" hits found!</b><br/>")
                             for (var i=0; i < hitstoshow; i++){
                             
                             //console.log(cidtag[i]);
