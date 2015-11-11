@@ -54,9 +54,9 @@ var TEMPLATE = '' + '<form class="atto_form">' +
     '<td><button class="pubchem_insert">{{get_string "insertbutton" component}}</button></td>' +
     '</tr></table>' +
     '<input type="radio" name="exact" id="exact" value="yes" checked="checked">' +
-    '<label for="pubchem">Exact match  </label>' +
+    '<label for="exact">Exact match  </label>' +
     '<input type="radio" name="exact" id="notexact" value="no">' +
-    '<label for="rcsb">Partial match</label>' +
+    '<label for="notexact">Partial match</label>' +
     '<div style="overflow:auto;" id="pubchem" class="pubchem">' +
     '<div id="pubchemoverview" class="pubchemoverview"></div>' +
     '<div style="max-height: 400px; overflow:auto;" id="pubchemdiv" class="pubchemdiv">' +
@@ -64,8 +64,9 @@ var TEMPLATE = '' + '<form class="atto_form">' +
     '</div>' +
     '<ul style="max-height: 400px; overflow:auto;" id="pubcheminfo" class="pubcheminfo"></ul></div>' +
     '<div class="rcsb">' +
-    '<div style="max-height: 400px; overflow:auto;" class="rcsbdiv"></div>' +
-    '<ul style="max-height: 400px; overflow:auto;" class="rcsbinfo"></ul></div>' +
+    '<div style="max-height: 400px; overflow:auto;" id="rcsbdiv" class="rcsbdiv">' +
+    '<button class="rcsb_searchret">Return</button></div>' +
+    '<ul style="max-height: 400px; overflow:auto;" id="rcsbinfo" class="rcsbinfo"></ul></div>' +
     '</div>' +
     '</form>';
 
@@ -172,12 +173,16 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                     clickedicon: clickedicon
                 }));
             this._form = content;
+            this._form.one(".pubchem_insert").set('disabled', true);
             this._form.one('#pubchemdiv').hide();
+            this._form.one('#rcsbdiv').hide();
             this._form.one('.' + CSS.INPUTSUBMIT).on('click', this._getPubChemData,this);
             this._form.one('.pubchem_insert').on('click', this._setImage,this);
             //this._form.one('.pubcheminfo').on('click', alert("It worked"),"ul li.pubchemsearchres");
             this._form.one('.pubcheminfo').on('click', this._viewPCRecord,"#pubchem ul li", this);
+            this._form.one('.rcsbinfo').on('click', this._viewRCSBRecord,"#rcsb ul li", this);
             this._form.one('.pubchem_searchret').on('click', this._PCReturn, this);
+            this._form.one('.rcsb_searchret').on('click', this._RCSBReturn, this);
             //this._form.one('.pubcheminfo').delegate('click', this._doIT, '#pubchem', 'ul li a.pubchemsearchres');
 
             return content;
@@ -187,26 +192,63 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 
         _PCReturn: function(e) {
              e.preventDefault()
-             this._form.one('#pubchemdiv').hide();
-             this._form.one('#pubcheminfo').show();
+             Y.one('#pubchemdiv').hide();
+             Y.one('#pubcheminfo').show();
+             Y.one(".pubchem_insert").set('disabled', true);
         },
+
+
+        _RCSBReturn: function(e) {
+             e.preventDefault()
+             Y.one('#rcsbdiv').hide();
+             Y.one('#rcsbinfo').show();
+             Y.one(".pubchem_insert").set('disabled', true);
+        },
+
+
 
         _viewPCRecord: function(e) {
             e.preventDefault();
 
+        Y.one(".pubchem_insert").set('disabled', false);
         Y.one('.pubcheminfo').hide();
         Y.one('#pubchemdiv').show();
         var currentTarget = e.currentTarget; // #container
         var target = e.target; // #container or a descendant
         var id = target.get("parentNode").get("id");
         //Y.one('#pubchemdiv').get('childNodes').remove();
-        var length = Y.one('#pubchemdiv').get('children').length;
-        console.log(length);
+        var length = Y.one('#pubchemdiv').get('children').size();
+        //console.log(Y.one('#pubchemdiv').get('children').size());
+        //console.log(Y.one('#pubchemdiv').get('children').slice(-1).item(0));
         if (length > 1) {
         Y.one('#pubchemdiv').get('children').slice(-1).item(0).remove();
         }
         //Y.one('#pubchemdiv').set('innerHTML',Y.one('#'+id));
-        Y.one('#pubchemdiv').insert(Y.one('#'+id).get('innerHTML'));
+        Y.one('#pubchemdiv').insert('<div>'+Y.one('#'+id).get('innerHTML')+'</div>');
+            //console.log(target.get("parentNode").get("id"));
+        //alert("Here");
+        },
+
+
+        _viewRCSBRecord: function(e) {
+            e.preventDefault();
+        console.log('HERE');
+        Y.one(".pubchem_insert").set('disabled', false);
+        Y.one('.rcsbinfo').hide();
+        Y.one('#rcsbdiv').show();
+        var currentTarget = e.currentTarget; // #container
+        var target = e.target; // #container or a descendant
+        var id = target.get("parentNode").get("id");
+        //Y.one('#pubchemdiv').get('childNodes').remove();
+        var length = Y.one('#rcsbdiv').get('children').size();
+        //console.log(Y.one('#pubchemdiv').get('children').size());
+        //console.log(Y.one('#pubchemdiv').get('children').slice(-1).item(0));
+        linktopdb = '<a href="http://www.rcsb.org/pdb/files/'+id+'.pdb.gz">'+id+'</a>';
+        if (length > 1) {
+        Y.one('#rcsbdiv').get('children').slice(-1).item(0).remove();
+        }
+        //Y.one('#pubchemdiv').set('innerHTML',Y.one('#'+id));
+        Y.one('#rcsbdiv').insert('<div>'+Y.one('#'+id).get('innerHTML')+'<br/>'+linktopdb+'</div>');
             //console.log(target.get("parentNode").get("id"));
         //alert("Here");
         },
@@ -222,7 +264,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             var pubchemsearchnode = Y.one('#search');
             var searchtext = pubchemsearchnode.get('value');
             var iframe = Y.one('#pubchemiframe');
-
+            Y.one(".pubchem_insert").set('disabled', true);
 //////PUBCHEM CODE HERE
             if (dbselected == 'pubchem') {
                 Y.one('.pubchem').show();
@@ -340,7 +382,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                           //  console.log(result);
                             var pdbtag = result.getElementsByTagName("PDB");
                             title = pdbtag[0].getAttribute('title');
-                            singleresult = '<a class = "pdblink" id = "'+pdbid+'" href="http://www.rcsb.org/pdb/explore.do?structureId='+pdbid+'">'+pdbid+'  </a>'+title+'<br/>';
+                            singleresult = '<li id="'+pdbid+'"><a class = "pdblink" id = "'+pdbid+'" href="http://www.rcsb.org/pdb/explore.do?structureId='+pdbid+'">'+pdbid+'  </a>'+title+'</li>';
                             rcsbinfo = Y.one('.rcsbinfo');
                             innerhtml = rcsbinfo.get('innerHTML');  
                             rcsbinfo.set('innerHTML', innerhtml + singleresult);
@@ -376,6 +418,12 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                             rcsbdiv = Y.one('.rcsbdiv');
                             //innerhtml = rcsbdiv.get('innerHTML');  
                             rcsbinfo.set('innerHTML', "<b>"+totalhits+" hits found</b><br/>")
+
+
+                            pubchem = Y.one('.pubchemoverview');
+                            //innerhtml = pubchemdiv.get('innerHTML');  
+                            //Y.one('.pubchem').prepend("<b>"+totalhits+" hits found!</b><br/>");
+                            pubchem.set('innerHTML', "<b>"+totalhits+" hits found!</b><br/>")
 
                             for (var i=0; i < hitstoshow; i++){
                             //console.log(res[i]);
