@@ -108,6 +108,9 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
          */
         initializer: function(config) {
             this._usercontextid = config.usercontextid;
+            this._contextid = config.contextid;
+            //console.log(this.get('contextid'));
+            console.log(config.contextid);
             var timestamp = new Date().getTime();
             this._filename = timestamp;
             var host = this.get('host');
@@ -180,7 +183,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             this._form.one('.pubchem_insert').on('click', this._setImage,this);
             //this._form.one('.pubcheminfo').on('click', alert("It worked"),"ul li.pubchemsearchres");
             this._form.one('.pubcheminfo').on('click', this._viewPCRecord,"#pubchem ul li", this);
-            this._form.one('.rcsbinfo').on('click', this._viewRCSBRecord,"#rcsb ul li", this);
+            this._form.one('.rcsbinfo').on('click', this._viewRCSBRecord, this);
             this._form.one('.pubchem_searchret').on('click', this._PCReturn, this);
             this._form.one('.rcsb_searchret').on('click', this._RCSBReturn, this);
             //this._form.one('.pubcheminfo').delegate('click', this._doIT, '#pubchem', 'ul li a.pubchemsearchres');
@@ -208,49 +211,99 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 
 
         _viewPCRecord: function(e) {
-            e.preventDefault();
+		    e.preventDefault();
 
-        Y.one(".pubchem_insert").set('disabled', false);
-        Y.one('.pubcheminfo').hide();
-        Y.one('#pubchemdiv').show();
-        var currentTarget = e.currentTarget; // #container
-        var target = e.target; // #container or a descendant
-        var id = target.get("parentNode").get("id");
-        //Y.one('#pubchemdiv').get('childNodes').remove();
-        var length = Y.one('#pubchemdiv').get('children').size();
-        //console.log(Y.one('#pubchemdiv').get('children').size());
-        //console.log(Y.one('#pubchemdiv').get('children').slice(-1).item(0));
-        if (length > 1) {
-        Y.one('#pubchemdiv').get('children').slice(-1).item(0).remove();
-        }
-        //Y.one('#pubchemdiv').set('innerHTML',Y.one('#'+id));
-        Y.one('#pubchemdiv').insert('<div>'+Y.one('#'+id).get('innerHTML')+'</div>');
-            //console.log(target.get("parentNode").get("id"));
-        //alert("Here");
+		Y.one(".pubchem_insert").set('disabled', false);
+		Y.one('.pubcheminfo').hide();
+		Y.one('#pubchemdiv').show();
+		var currentTarget = e.currentTarget; // #container
+		var target = e.target; // #container or a descendant
+		var id = target.get("parentNode").get("id");
+		//Y.one('#pubchemdiv').get('childNodes').remove();
+		var length = Y.one('#pubchemdiv').get('children').size();
+		//console.log(Y.one('#pubchemdiv').get('children').size());
+		//console.log(Y.one('#pubchemdiv').get('children').slice(-1).item(0));
+		if (length > 1) {
+		Y.one('#pubchemdiv').get('children').slice(-1).item(0).remove();
+		}
+		//Y.one('#pubchemdiv').set('innerHTML',Y.one('#'+id));
+		Y.one('#pubchemdiv').insert('<div>'+Y.one('#'+id).get('innerHTML')+'</div>');
+		    //console.log(target.get("parentNode").get("id"));
+		//alert("Here");
         },
 
 
-        _viewRCSBRecord: function(e) {
-            e.preventDefault();
-        console.log('HERE');
-        Y.one(".pubchem_insert").set('disabled', false);
-        Y.one('.rcsbinfo').hide();
-        Y.one('#rcsbdiv').show();
-        var currentTarget = e.currentTarget; // #container
-        var target = e.target; // #container or a descendant
-        var id = target.get("parentNode").get("id");
-        //Y.one('#pubchemdiv').get('childNodes').remove();
-        var length = Y.one('#rcsbdiv').get('children').size();
-        //console.log(Y.one('#pubchemdiv').get('children').size());
-        //console.log(Y.one('#pubchemdiv').get('children').slice(-1).item(0));
-        linktopdb = '<a href="http://www.rcsb.org/pdb/files/'+id+'.pdb.gz">'+id+'</a>';
-        if (length > 1) {
-        Y.one('#rcsbdiv').get('children').slice(-1).item(0).remove();
+        _viewRCSBRecord: function(e, config) {
+		e.preventDefault();
+		console.log('viewRCSBRecord');
+		Y.one(".pubchem_insert").set('disabled', false);
+		Y.one('.rcsbinfo').hide();
+		Y.one('#rcsbdiv').show();
+		var currentTarget = e.currentTarget; // #container
+		var target = e.target; // #container or a descendant
+		var id = target.get("parentNode").get("id");
+		//Y.one('#pubchemdiv').get('childNodes').remove();
+		var length = Y.one('#rcsbdiv').get('children').size();
+		//console.log(Y.one('#pubchemdiv').get('children').size());
+		//console.log(Y.one('#pubchemdiv').get('children').slice(-1).item(0));
+		linktopdb = '<a href="http://www.rcsb.org/pdb/files/'+id+'.pdb.gz">'+id+'</a>';
+		if (length > 1) {
+		Y.one('#rcsbdiv').get('children').slice(-1).item(0).remove();
+		}
+		//Y.one('#pubchemdiv').set('innerHTML',Y.one('#'+id));
+		Y.one('#rcsbdiv').insert('<div>'+Y.one('#'+id).get('innerHTML')+'<br/>'+linktopdb+'</div>');
+		    //console.log(target.get("parentNode").get("id"));
+		//alert("Here");
+                htmltofilter = '<div>'+Y.one('#'+id).get('innerHTML')+'<br/>'+linktopdb+'</div>'
+
+		//equation = DELIMITERS.START + ' ' + equation + ' ' + DELIMITERS.END;
+		// Make an ajax request to the filter.
+	/*	url = M.cfg.wwwroot + '/lib/editor/atto/plugins/pubchem/ajax.php';
+                console.log(this._contextid);
+                console.log(this.get('contextid'));
+		params = {
+		    sesskey: M.cfg.sesskey,
+		    contextid: this._contextid,
+		    action: 'filtertext',
+		    text: htmltofilter
+		};
+
+		Y.io(url, {
+		    context: this,
+		    data: params,
+		    timeout: 500,
+		    on: {
+		        complete: console.log("Complete")
+		    }
+		});  */
+
+
+        var url = M.cfg.wwwroot + '/lib/editor/atto/plugins/pubchem/ajax.php';
+        var params = {
+            sesskey: M.cfg.sesskey,
+            contextid: this.get('contextid'),
+            action: 'filtertext',
+            text: htmltofilter
+        };
+
+        var preview = Y.io(url, {
+            sync: true,
+            data: params,
+            method: 'POST'
+        });
+
+        if (preview.status === 200) {
+            content = preview.responseText;
+            console.log(content);
         }
-        //Y.one('#pubchemdiv').set('innerHTML',Y.one('#'+id));
-        Y.one('#rcsbdiv').insert('<div>'+Y.one('#'+id).get('innerHTML')+'<br/>'+linktopdb+'</div>');
-            //console.log(target.get("parentNode").get("id"));
-        //alert("Here");
+
+
+
+
+
+
+
+
         },
 
 
@@ -458,30 +511,23 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
         },
 
 
- //   _setImage: function(e) {
- //         alert('HERE I AM');
-//
-//    },
 
 
 
 
     _setImage: function(e) {
+
+            e.preventDefault();
+            var dbselected = Y.one('[name=database]:checked').get('value');
+////PUBCHEM code
+if (dbselected == 'pubchem') {
         var form = this._form,
             //url = form.one('.' + CSS.INPUTURL).get('value'),
             searchtext = Y.one('.search').get('value'),
             url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/PNG';
             alt = searchtext,
-            //width = form.one('.' + CSS.INPUTWIDTH).get('value'),
-            //height = form.one('.' + CSS.INPUTHEIGHT).get('value'),
-            //alignment = form.one('.' + CSS.INPUTALIGNMENT).get('value'),
             margin = '',
-            //presentation = form.one('.' + CSS.IMAGEPRESENTATION).get('checked'),
-            //constrain = form.one('.' + CSS.INPUTCONSTRAIN).get('checked'),
-            //imagehtml,
             customstyle = '',
-            //i,
-            //css,
             classlist = [],
             host = this.get('host');
 
@@ -495,10 +541,6 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             imagehtml = template({
                 url: url,
                 alt: alt,
-               // width: width,
-               // height: height,
-               // presentation: presentation,
-               // alignment: alignment,
                 margin: margin,
                 customstyle: customstyle,
                 classlist: classlist.join(' ')
@@ -508,6 +550,12 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 
             this.markUpdated();
         }
+} else {
+////RCSB code
+console.log("Insert RCSB Code into Page")
+
+
+}
 
         this.getDialogue({
             focusAfterHide: null
@@ -528,6 +576,9 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             },
             defaultheight: {
                 value: '100'
+            },
+            contextid: {
+            value: null
             },
             path: {
                 value: ''

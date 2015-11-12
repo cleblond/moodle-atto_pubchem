@@ -54,6 +54,14 @@ function atto_pubchem_params_for_js($elementid, $options, $fpoptions) {
     }
     // Add our disabled param.
     $params['disabled'] = $disabled;
+    // Add contextid
+    $context = $options['context'];
+    if (!$context) {
+        $context = context_system::instance();
+    }
+    $params['contextid'] = $context->id;
+    //print_object($params);
+    //echo $params;
     // Add our path to marvinjs.
     $params['path']     = "http://" . $_SERVER['HTTP_HOST'] . get_config('atto_pubchem', 'path');
     return $params;
