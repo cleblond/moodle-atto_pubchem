@@ -258,12 +258,12 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 
 		//equation = DELIMITERS.START + ' ' + equation + ' ' + DELIMITERS.END;
 		// Make an ajax request to the filter.
-	/*	url = M.cfg.wwwroot + '/lib/editor/atto/plugins/pubchem/ajax.php';
-                console.log(this._contextid);
-                console.log(this.get('contextid'));
+		url = M.cfg.wwwroot + '/lib/editor/atto/plugins/pubchem/ajax.php';
+                //console.log(this._contextid);
+                //console.log(this.get('contextid'));
 		params = {
 		    sesskey: M.cfg.sesskey,
-		    contextid: this._contextid,
+		    contextid: this.get('contextid'),
 		    action: 'filtertext',
 		    text: htmltofilter
 		};
@@ -273,12 +273,12 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 		    data: params,
 		    timeout: 500,
 		    on: {
-		        complete: console.log("Complete")
+		        complete: this._loadPreview
 		    }
-		});  */
+		});  
 
 
-        var url = M.cfg.wwwroot + '/lib/editor/atto/plugins/pubchem/ajax.php';
+      /*  var url = M.cfg.wwwroot + '/lib/editor/atto/plugins/pubchem/ajax.php';
         var params = {
             sesskey: M.cfg.sesskey,
             contextid: this.get('contextid'),
@@ -295,7 +295,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
         if (preview.status === 200) {
             content = preview.responseText;
             console.log(content);
-        }
+        }  */
 
 
 
@@ -305,6 +305,18 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 
 
         },
+
+
+
+    _loadPreview: function(id, preview) {
+        var previewNode = Y.one('.rcsbdiv');
+
+        if (preview.status === 200) {
+            previewNode.setHTML(preview.responseText);
+
+            Y.fire(M.core.event.FILTER_CONTENT_UPDATED, {nodes: (new Y.NodeList(previewNode))});
+        }
+    },
 
 
 

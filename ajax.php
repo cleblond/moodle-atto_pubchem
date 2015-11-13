@@ -38,8 +38,11 @@ require_sesskey();
 
 $action = required_param('action', PARAM_ALPHA);
 
+echo $action;
+
 if ($action === 'filtertext') {
     $text = required_param('text', PARAM_RAW);
+    print_object($course);
 
     $result = filter_manager::instance()->filter_text($text, $context);
     echo $OUTPUT->header();
