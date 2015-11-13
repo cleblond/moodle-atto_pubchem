@@ -181,7 +181,8 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             this._form.one('.pubchem_insert').on('click', this._setImage,this);
             //this._form.one('.pubcheminfo').on('click', alert("It worked"),"ul li.pubchemsearchres");
             this._form.one('.pubcheminfo').on('click', this._viewPCRecord,"#pubchem ul li", this);
-            this._form.one('.rcsbinfo').on('click', this._viewRCSBRecord, this);
+            //this._form.one('.rcsbinfo').on('click', this._viewRCSBRecord, this);
+            this._form.one('.rcsbinfo').delegate('click', this._viewRCSBRecord, '.pdblink', this);
             this._form.one('.pubchem_searchret').on('click', this._PCReturn, this);
             this._form.one('.rcsb_searchret').on('click', this._RCSBReturn, this);
             //this._form.one('.pubcheminfo').delegate('click', this._doIT, '#pubchem', 'ul li a.pubchemsearchres');
@@ -239,24 +240,26 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 		Y.one('#rcsbdiv').show();
 		var currentTarget = e.currentTarget; // #container
 		var target = e.target; // #container or a descendant
-		var id = target.get("parentNode").get("id");
+                
+		var id = target.get("id");
+                html = target.get("parentNode").get('innerHTML');
 		//Y.one('#pubchemdiv').get('childNodes').remove();
 		var length = Y.one('#rcsbdiv').get('children').size();
 		//console.log(Y.one('#pubchemdiv').get('children').size());
 		//console.log(Y.one('#pubchemdiv').get('children').slice(-1).item(0));
-		linktopdb = '<a href="http://www.rcsb.org/pdb/files/'+id+'.pdb.gz">'+id+'</a>';
+		linktopdb = '<a href="http://www.rcsb.org/pdb/files/'+id+'.pdb.gz">'+id+'(You must not have JMOL filter installed or enabled</a>';
 		if (length > 1) {
 		Y.one('#rcsbdiv').get('children').slice(-1).item(0).remove();
 		}
 		//Y.one('#pubchemdiv').set('innerHTML',Y.one('#'+id));
-		Y.one('#rcsbdiv').insert('<div>'+Y.one('#'+id).get('innerHTML')+'<br/>'+linktopdb+'</div>');
+		Y.one('#rcsbdiv').insert('<div>'+html+'<br/>'+linktopdb+'</div>');
 		    //console.log(target.get("parentNode").get("id"));
 		//alert("Here");
-                htmltofilter = '<div>'+Y.one('#'+id).get('innerHTML')+'<br/>'+linktopdb+'</div>'
+                //htmltofilter = '<div>'+Y.one('#'+id).get('innerHTML')+'<br/>'+linktopdb+'</div>'
 
 		//equation = DELIMITERS.START + ' ' + equation + ' ' + DELIMITERS.END;
 		// Make an ajax request to the filter.
-		url = M.cfg.wwwroot + '/lib/editor/atto/plugins/pubchem/ajax.php';
+		/*url = M.cfg.wwwroot + '/lib/editor/atto/plugins/pubchem/ajax.php';
                 //console.log(this._contextid);
                 //console.log(this.get('contextid'));
 		params = {
@@ -275,35 +278,8 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 		    }
 		});  
 
+               */
 
-<<<<<<< HEAD
-      /*  var url = M.cfg.wwwroot + '/lib/editor/atto/plugins/pubchem/ajax.php';
-        var params = {
-            sesskey: M.cfg.sesskey,
-            contextid: this.get('contextid'),
-            action: 'filtertext',
-            text: htmltofilter
-        };
-
-        var preview = Y.io(url, {
-            sync: true,
-            data: params,
-            method: 'POST'
-        });
-
-        if (preview.status === 200) {
-            content = preview.responseText;
-            console.log(content);
-        }  */
-
-
-
-
-
-
-
-=======
->>>>>>> b1acb7862d2bad741e1555c03af0dd90c76365f1
 
         },
 
@@ -466,7 +442,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                 function getTitleforPDBids (pdbids) {
                 var xhrdesc = new XMLHttpRequest();
                 //xhrdesc.open("GET", 'http://www.rcsb.org/pdb/rest/describePDB?structureId=' + pdbid, true);
-                xhrdesc.open("GET", 'http://www.rcsb.org/pdb/rest/customReport.csv?pdbids='+pdbids+'&customReportColumns=structureId,structureTitle,experimentalTechnique&format=xml', true);
+                xhrdesc.open("GET", 'http://www.rcsb.org/pdb/rest/customReport.csv?pdbids='+pdbids+'&customReportColumns=structureId,structureTitle,experimentalTechnique,publicationYear,journalName,pubmedId,title,experimentalTechnique&format=xml', true);
 
 
 //                xhrdesc.open("GET", 'http://www.rcsb.org/pdb/rest/customReport.csv?pdbids='+pdbids+'&customReportColumns=structureId,structureTitle,experimentalTechnique,pubmedId,title,publicationYear,authors,sequence&format=xml', true);
@@ -487,8 +463,18 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                            for (var i = 0; i < records.length; i++) {  
                             title = records[i].getElementsByTagName('dimStructure.structureTitle')[0].innerHTML;
                             pdbid = records[i].getElementsByTagName('dimStructure.structureId')[0].innerHTML;
+                            citationtitle = records[i].getElementsByTagName('dimStructure.title')[0].innerHTML;
+                            citationyear = records[i].getElementsByTagName('dimStructure.publicationYear')[0].innerHTML;
+                            pubmedid = records[i].getElementsByTagName('dimStructure.pubmedId')[0].innerHTML;
+                            technique = records[i].getElementsByTagName('dimStructure.experimentalTechnique')[0].innerHTML;
+                            citationjournal = records[i].getElementsByTagName('dimStructure.journalName')[0].innerHTML;
+                            //citationtitle = records[i].getElementsByTagName('dimStructure.title')[0].innerHTML;
+                            //pdbid = records[i].getElementsByTagName('dimStructure.structureId')[0].innerHTML;
+
+
+
                             //console.log(title);
-                            innerhtml += '<li id="'+pdbid+'"><a class = "pdblink" id = "'+pdbid+'" href="http://www.rcsb.org/pdb/explore.do?structureId='+pdbid+'">'+pdbid+'  </a>'+title+'</li>';
+                            innerhtml += '<li><a class = "pdblink" id = "'+pdbid+'" href="http://www.rcsb.org/pdb/explore.do?structureId='+pdbid+'">'+pdbid+'  </a>'+title+'<ul><li>Citation Title: '+citationtitle+'</li><li>Technique: '+technique+'</li><li>Journal: '+citationjournal+'</li><li>Year: '+citationyear+'</li><li>Link to PubMed: '+pubmedid+'</li></ul></li>';
                             
                             //innerhtml = rcsbinfo.get('innerHTML');  
                             
@@ -541,25 +527,9 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                             //Y.one('.pubchem').prepend("<b>"+totalhits+" hits found!</b><br/>");
                             pubchem.set('innerHTML', "<b>"+totalhits+" hits found!</b><br/>")
 
-/*  check this out for single transaction
-http://www.rcsb.org/pdb/rest/customReport.csv?pdbids=1stp,2jef,1cdg&customReportColumns=structureId,structureTitle,experimentalTechnique&format=xml
-*/
                             searchxml = getTitleforPDBids(resultcsv);
                             console.log(searchxml);
-/*
 
-                            for (var i=0; i < hitstoshow; i++){
-                            //console.log(res[i]);
-                            title = getTitleforPDBid(res[i]);
-                            singleresult = '<a href="http://www.rcsb.org/pdb/explore.do?structureId='+res[i]+'">'+res[i]+'  </a>'+title+'<br/>';
-                            searchresults += singleresult;
-                            //console.log(title);
-                            }
-                            searchresults += '</div>';
-*/
-
-
-                            //console.log(searchresults);
                         } else {
                             alert('XMLHttpRequest Failed');
 
