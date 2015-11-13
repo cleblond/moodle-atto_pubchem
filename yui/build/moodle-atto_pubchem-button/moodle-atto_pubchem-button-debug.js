@@ -278,31 +278,6 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 		});  */
 
 
-        var url = M.cfg.wwwroot + '/lib/editor/atto/plugins/pubchem/ajax.php';
-        var params = {
-            sesskey: M.cfg.sesskey,
-            contextid: this.get('contextid'),
-            action: 'filtertext',
-            text: htmltofilter
-        };
-
-        var preview = Y.io(url, {
-            sync: true,
-            data: params,
-            method: 'POST'
-        });
-
-        if (preview.status === 200) {
-            content = preview.responseText;
-            console.log(content);
-        }
-
-
-
-
-
-
-
 
         },
 
@@ -422,7 +397,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                 Y.one('.rcsb').show();
                 rcsbinfo = Y.one('.rcsbinfo');
                 innerhtml = rcsbinfo.set('innerHTML', "");
-
+/*
                 function getTitleforPDBid (pdbid) {
                 var xhrdesc = new XMLHttpRequest();
                 xhrdesc.open("GET", 'http://www.rcsb.org/pdb/rest/describePDB?structureId=' + pdbid, true);
@@ -448,9 +423,57 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                     }
 
                 };
-
-
                 }
+*/
+                function getTitleforPDBids (pdbids) {
+                var xhrdesc = new XMLHttpRequest();
+                //xhrdesc.open("GET", 'http://www.rcsb.org/pdb/rest/describePDB?structureId=' + pdbid, true);
+                xhrdesc.open("GET", 'http://www.rcsb.org/pdb/rest/customReport.csv?pdbids='+pdbids+'&customReportColumns=structureId,structureTitle,experimentalTechnique&format=xml', true);
+
+
+//                xhrdesc.open("GET", 'http://www.rcsb.org/pdb/rest/customReport.csv?pdbids='+pdbids+'&customReportColumns=structureId,structureTitle,experimentalTechnique,pubmedId,title,publicationYear,authors,sequence&format=xml', true);
+
+
+                //console.log('http://www.rcsb.org/pdb/rest/customReport.csv?pdbids='+pdbids+'&customReportColumns=structureId,structureTitle,experimentalTechnique&format=xml')
+                xhrdesc.send();
+
+                xhrdesc.onreadystatechange = function() {
+                    if (xhrdesc.readyState === 4) {
+                        if (xhrdesc.status === 200) {
+                            var result = xhrdesc.responseXML;
+                            //console.log(result);
+                            var records = result.getElementsByTagName("record");
+                            console.log(records);
+                            console.log(records.length);
+                            innerhtml = '';
+                           for (var i = 0; i < records.length; i++) {  
+                            title = records[i].getElementsByTagName('dimStructure.structureTitle')[0].innerHTML;
+                            pdbid = records[i].getElementsByTagName('dimStructure.structureId')[0].innerHTML;
+                            //console.log(title);
+                            innerhtml += '<li id="'+pdbid+'"><a class = "pdblink" id = "'+pdbid+'" href="http://www.rcsb.org/pdb/explore.do?structureId='+pdbid+'">'+pdbid+'  </a>'+title+'</li>';
+                            
+                            //innerhtml = rcsbinfo.get('innerHTML');  
+                            
+                           }
+                           rcsbinfo = Y.one('.rcsbinfo');
+			   rcsbinfo.set('innerHTML', innerhtml);
+
+
+
+                            //title = pdbtag[0].getAttribute('title');
+                            
+                            //return title;
+                            
+                        } else {
+                            alert('XMLHttpRequest Failed');
+
+                        }
+                    }
+
+                };
+                }
+
+                
 
 
                 ///search by keywords
@@ -461,12 +484,14 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                         if (xhr.status === 200) {
                             //var result = JSON.parse(xhr.responseText);
                             var result = xhr.responseText;
-                            var res = result.split("\n");
-
+                            //var res = result.split("\n");
+                            resultcsv = result.replace(/(?:\r\n|\r|\n)/g, "\,");
+                            totalhits = resultcsv.split("\,").length;
+                            console.log(resultcsv);
                             //for (var i=0; i < res.length; i++){
                             var searchresults = '<div>';
 
-                            var totalhits = res.length;
+                            //var totalhits = res.length;
                             var hitstoshow = totalhits > 20 ? 20 : totalhits;
                             rcsbdiv = Y.one('.rcsbdiv');
                             //innerhtml = rcsbdiv.get('innerHTML');  
@@ -478,6 +503,13 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                             //Y.one('.pubchem').prepend("<b>"+totalhits+" hits found!</b><br/>");
                             pubchem.set('innerHTML', "<b>"+totalhits+" hits found!</b><br/>")
 
+/*  check this out for single transaction
+http://www.rcsb.org/pdb/rest/customReport.csv?pdbids=1stp,2jef,1cdg&customReportColumns=structureId,structureTitle,experimentalTechnique&format=xml
+*/
+                            searchxml = getTitleforPDBids(resultcsv);
+                            console.log(searchxml);
+/*
+
                             for (var i=0; i < hitstoshow; i++){
                             //console.log(res[i]);
                             title = getTitleforPDBid(res[i]);
@@ -486,6 +518,9 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                             //console.log(title);
                             }
                             searchresults += '</div>';
+*/
+
+
                             //console.log(searchresults);
                         } else {
                             alert('XMLHttpRequest Failed');
