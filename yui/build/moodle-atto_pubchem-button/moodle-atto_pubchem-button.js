@@ -180,7 +180,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             this._form.one('#pubchemdiv').hide();
             this._form.one('#rcsbdiv').hide();
             this._form.one('.' + CSS.INPUTSUBMIT).on('click', this._getPubChemData,this);
-            this._form.one('.pubchem_insert').on('click', this._setImage,this);
+            this._form.one('.pubchem_insert').on('click', this._insertRecord,this);
             //this._form.one('.pubcheminfo').on('click', alert("It worked"),"ul li.pubchemsearchres");
             this._form.one('.pubcheminfo').on('click', this._viewPCRecord,"#pubchem ul li", this);
             //this._form.one('.rcsbinfo').on('click', this._viewRCSBRecord, this);
@@ -560,12 +560,13 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 
 
 
-    _setImage: function(e) {
+    _insertRecord: function(e) {
 
             e.preventDefault();
             var dbselected = Y.one('[name=database]:checked').get('value');
 ////PUBCHEM code
 if (dbselected == 'pubchem') {
+/*
         var form = this._form,
             //url = form.one('.' + CSS.INPUTURL).get('value'),
             searchtext = Y.one('.search').get('value'),
@@ -589,17 +590,123 @@ if (dbselected == 'pubchem') {
                 margin: margin,
                 customstyle: customstyle,
                 classlist: classlist.join(' ')
-            });
+            }); */
+
+  searchtext = Y.one('.search').get('value');
+            imagehtml = '<img src="https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/PNG"/>' +
+            '<a href="https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/SDF?record_type=3d">HERE</a>';
+
 
             this.get('host').insertContentAtFocusPoint(imagehtml);
 
             this.markUpdated();
-        }
+        //}
 } else {
-////RCSB code
-console.log("Insert RCSB Code into Page")
+       ////RCSB code
+       console.log("Insert RCSB Code into Page");
+       inserthtml=Y.one('.rcsbdiv').get('innerHTML');
+       //console.log(inserthtml);
+
+       //ajax to save pdb in repo
+                fileurl = "http://www.rcsb.org/pdb/files/4hhb.pdb.gz";
+                //xhr.open("GET", "http://www.rcsb.org/pdb/rest/search", true);
+                //xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                //xhr.send(querytext);
+                var host = this.get('host');
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                       // var placeholder = self.editor.one('#' + uploadid);
+                        if (xhr.status === 200) {
+                        //got response so perform ajax to add file to repo
+                            var filecontent = xhr.responseText;
+                            console.log(filecontent);
+
+                            var options = host.get('filepickeroptions').image;
+                            console.log(host.get('filepickeroptions'));
+                            console.log(options);
+                            var savepath = (options.savepath === undefined) ? '/' : options.savepath;
+                            var formData = new FormData();
+                            formData.append('repo_upload_file', filecontent);
+                            formData.append('itemid', options.itemid);
+		            // List of repositories is an object rather than an array.  This makes iteration more awkward.
+		            var keys = Object.keys(options.repositories);
+		            for (var i=0; i<keys.length; i++) {
+		                if (options.repositories[keys[i]].type === 'upload') {
+		                    formData.append('repo_id', options.repositories[keys[i]].id);
+		                    break;
+		                }
+		            }
+		            formData.append('env', options.env);
+		            formData.append('sesskey', M.cfg.sesskey);
+		            formData.append('client_id', options.client_id);
+		            formData.append('savepath', savepath);
+                            formData.append('title', 'some title');
+		            formData.append('ctx_id', options.context.id);
+                            console.log(options.client_id);
+                            console.log(formData);
+                            var timestamp = new Date().getTime();
+                            var uploadid = 'moodleimage_' + Math.round(Math.random()*100000)+'-'+timestamp;
+				xhr.onreadystatechange = function() {
+				    if (xhr.readyState === 4) {
+				        var placeholder = self.editor.one('#' + uploadid);
+				        if (xhr.status === 200) {
+				            var result = JSON.parse(xhr.responseText);
+				            if (result) {
+				                if (result.error) {
+				                    if (placeholder) {
+				                        placeholder.remove(true);
+				                    }
+				                    return new M.core.ajaxException(result);
+				                }
+
+				                var file = result;
+				                if (result.event && result.event === 'fileexists') {
+				                    // A file with this name is already in use here - rename to avoid conflict.
+				                    // Chances are, it's a different image (stored in a different folder on the user's computer).
+				                    // If the user wants to reuse an existing image, they can copy/paste it within the editor.
+				                    file = result.newfile;
+				                }
+
+				                // Replace placeholder with actual image.
+				                var newhtml = template({
+				                    url: file.url,
+				                    presentation: true
+				                });
+				                var newimage = Y.Node.create(newhtml);
+				                if (placeholder) {
+				                    placeholder.replace(newimage);
+				                } else {
+				                    self.editor.appendChild(newimage);
+				                }
+				                self.markUpdated();
+				            }
+				        } else {
+				            alert(M.util.get_string('servererror', 'moodle'));
+				            if (placeholder) {
+				                placeholder.remove(true);
+				            }
+				        }
+				    }
+				};
 
 
+                            xhr.open("POST", M.cfg.wwwroot + '/repository/repository_ajax.php?action=upload', true);
+                            xhr.send(formData);
+
+
+                        }
+                    }
+                };
+                xhr.open("GET", fileurl, true);
+                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+                xhr.send(querytext);
+
+
+
+
+       this.get('host').insertContentAtFocusPoint(inserthtml);
+            this.markUpdated();
 }
 
         this.getDialogue({
