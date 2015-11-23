@@ -115,6 +115,16 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             this._filename = timestamp;
             var host = this.get('host');
             var options = host.get('filepickeroptions');
+           if (options.image && options.image.itemid) {
+                this._itemid = options.image.itemid;
+            } else {
+                Y.log(
+                    'Plugin PoodLL Anywhere not available because itemid is missing.',
+                    'warn', LOGNAME);
+                return;
+            }
+
+
             // If we don't have the capability to view then give up.
             if (this.get('disabled')) {
                 return;
@@ -556,7 +566,43 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
         },
 
 
-
+        _uploadFile: function(filedata, recid, filename) {
+            var xhr = new XMLHttpRequest();
+            var ext = "pdb";
+            // file received/failed
+            xhr.onreadystatechange = (function() {
+                return function() {
+                    if (xhr.readyState === 4) {
+                        if (xhr.status === 200) {
+                            var resp = xhr.responseText;
+                            var start = resp.indexOf(
+                                "success<error>");
+                            if (start < 1) {
+                                return;
+                            }
+                        }
+                    }
+                };
+            })(this);
+            var params = "datatype=uploadfile";
+            params += "&paramone=" + encodeURIComponent(filedata);
+            params += "&paramtwo=" + ext;
+            params += "&paramthree=image";
+            params += "&requestid=" + filename;
+            params += "&contextid=" + this._usercontextid;
+            params += "&component=user";
+            params += "&filearea=draft";
+            params += "&itemid=" + this._itemid;
+            xhr.open("POST", M.cfg.wwwroot +
+                "/lib/editor/atto/plugins/pubchem/pubchemfilelib.php",
+                true);
+            xhr.setRequestHeader("Content-Type",
+                "application/x-www-form-urlencoded");
+            xhr.setRequestHeader("Cache-Control", "no-cache");
+            xhr.setRequestHeader("Content-length", params.length);
+            xhr.setRequestHeader("Connection", "close");
+            xhr.send(params);
+        },
 
 
 
@@ -608,10 +654,12 @@ if (dbselected == 'pubchem') {
        //console.log(inserthtml);
 
        //ajax to save pdb in repo
-                fileurl = "http://www.rcsb.org/pdb/files/4hhb.pdb.gz";
+               // fileurl = "http://www.rcsb.org/pdb/files/4hhb.pdb.gz";
+               fileurl = "http://www.rcsb.org/pdb/files/4hhb.pdb";
                 //xhr.open("GET", "http://www.rcsb.org/pdb/rest/search", true);
                 //xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                 //xhr.send(querytext);
+                var this_=this;
                 var host = this.get('host');
                 var xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = function() {
@@ -626,10 +674,14 @@ if (dbselected == 'pubchem') {
                             console.log(host.get('filepickeroptions'));
                             console.log(options);
                             var savepath = (options.savepath === undefined) ? '/' : options.savepath;
-                            var formData = new FormData();
-                            formData.append('repo_upload_file', filecontent);
-                            formData.append('itemid', options.itemid);
+                            var filename = new Date().getTime();
+                            var thefilename = "4hhb"+filename+".pdb";
+                            this_._uploadFile(filecontent,"1",thefilename);
+                            //var formData = new FormData();
+                            //formData.append('repo_upload_file', filecontent);
+                            //formData.append('itemid', options.itemid);
 		            // List of repositories is an object rather than an array.  This makes iteration more awkward.
+                            /*
 		            var keys = Object.keys(options.repositories);
 		            for (var i=0; i<keys.length; i++) {
 		                if (options.repositories[keys[i]].type === 'upload') {
@@ -646,7 +698,8 @@ if (dbselected == 'pubchem') {
                             console.log(options.client_id);
                             console.log(formData);
                             var timestamp = new Date().getTime();
-                            var uploadid = 'moodleimage_' + Math.round(Math.random()*100000)+'-'+timestamp;
+                            var uploadid = 'moodleimage_' + Math.round(Math.random()*100000)+'-'+timestamp;   */
+                                /*
 				xhr.onreadystatechange = function() {
 				    if (xhr.readyState === 4) {
 				        var placeholder = self.editor.one('#' + uploadid);
@@ -693,6 +746,7 @@ if (dbselected == 'pubchem') {
 
                             xhr.open("POST", M.cfg.wwwroot + '/repository/repository_ajax.php?action=upload', true);
                             xhr.send(formData);
+                            */
 
 
                         }
