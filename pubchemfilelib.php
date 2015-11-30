@@ -60,7 +60,7 @@ function uploadfile($filedata, $fileextension, $mediatype, $actionid, $contextid
         case "pdb":
             break;
         default:
-            $fileextension = "mp3";
+            $fileextension = "pdb";
     }
     $fs       = get_file_storage();
     // Assume a root level filepath.
@@ -88,14 +88,17 @@ function uploadfile($filedata, $fileextension, $mediatype, $actionid, $contextid
             $file = $fs->get_file($contextid, $comp, $farea, $itemid, $filepath, $filename);
             $file->delete();
             // Check there is no metadata prefixed to the base 64. From OL widgets, none, from JS yes!
-            $metapos = strpos($filedata, ",");
+            /*$metapos = strpos($filedata, ",");
             if ($metapos > 10 && $metapos < 30) {
                 $filedata = substr($filedata, $metapos + 1);
-            }
+            }*/
             // Decode the data and store it!
-            $xfiledata   = base64_decode($filedata);
+            //$xfiledata   = base64_decode($filedata);
+            $xfiledata   = $filedata;
+            //echo "HERE".$filedata;
             // Create the file!
-            $storedfile = $fs->create_file_from_string($record, $xfiledata);
+            //print_object($record);
+            $storedfile = $fs->create_file_from_string($record, $filedata);
         } else {
             $storedfile       = false;
             $return['success'] = false;
@@ -105,12 +108,13 @@ function uploadfile($filedata, $fileextension, $mediatype, $actionid, $contextid
         /*check there is no metadata prefixed to the base 64. From OL widgets, none, from JS yes
         if so it will look like this: data:image/png;base64,iVBORw0K
         we remove it, there must be a better way of course ...  */
-        $metapos = strpos($filedata, ",");
+       /* $metapos = strpos($filedata, ",");
         if ($metapos > 10 && $metapos < 30) {
             $filedata = substr($filedata, $metapos + 1);
-        }
+        }*/
         // Decode the data and store it in memory.
-        $xfiledata   = base64_decode($filedata);
+        //$xfiledata   = base64_decode($filedata);
+        $xfiledata   = $filedata;
         $storedfile = $fs->create_file_from_string($record, $xfiledata);
     }
     // If successful return filename.

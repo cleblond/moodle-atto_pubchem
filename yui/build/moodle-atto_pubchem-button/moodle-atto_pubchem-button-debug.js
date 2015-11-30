@@ -110,7 +110,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             this._usercontextid = config.usercontextid;
             this._contextid = config.contextid;
             //console.log(this.get('contextid'));
-            console.log(config.contextid);
+            //console.log(config.contextid);
             var timestamp = new Date().getTime();
             this._filename = timestamp;
             var host = this.get('host');
@@ -265,32 +265,6 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 		}
 		//Y.one('#pubchemdiv').set('innerHTML',Y.one('#'+id));
 		Y.one('#rcsbdiv').insert('<div>'+html+'<br/>'+linktopdb+'</div>');
-		    //console.log(target.get("parentNode").get("id"));
-		//alert("Here");
-                //htmltofilter = '<div>'+Y.one('#'+id).get('innerHTML')+'<br/>'+linktopdb+'</div>'
-
-		//equation = DELIMITERS.START + ' ' + equation + ' ' + DELIMITERS.END;
-		// Make an ajax request to the filter.
-		/*url = M.cfg.wwwroot + '/lib/editor/atto/plugins/pubchem/ajax.php';
-                //console.log(this._contextid);
-                //console.log(this.get('contextid'));
-		params = {
-		    sesskey: M.cfg.sesskey,
-		    contextid: this.get('contextid'),
-		    action: 'filtertext',
-		    text: htmltofilter
-		};
-
-		Y.io(url, {
-		    context: this,
-		    data: params,
-		    timeout: 500,
-		    on: {
-		        complete: this._loadPreview
-		    }
-		});  
-
-               */
 
 
         },
@@ -346,8 +320,8 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 
                             var result = xhrdesc.responseText;
                             var jsonresult = JSON.parse(result);
-                            console.log(jsonresult);
-                            console.log(jsonresult.PropertyTable.Properties.IUPACName);
+                            //console.log(jsonresult);
+                            //console.log(jsonresult.PropertyTable.Properties.IUPACName);
                             //preferredname = jsonresult.PC_Compounds[0].props[8].value.sval;
                             preferredname = jsonresult.PropertyTable.Properties[0].IUPACName;
                             //console.log(result);
@@ -358,7 +332,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                             pubcheminfo = Y.one('.pubcheminfo');
                             innerhtml = pubcheminfo.get('innerHTML');  
                             pubcheminfo.set('innerHTML', innerhtml + singleresult);
-                            console.log(cid);
+                            //console.log(cid);
 
                             //this._form.one('.pubcheminfo').on('click', alert("HHEREREEE"),this);
                             //return title;
@@ -423,44 +397,13 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                 Y.one('.rcsb').show();
                 rcsbinfo = Y.one('.rcsbinfo');
                 innerhtml = rcsbinfo.set('innerHTML', "");
-/*
-                function getTitleforPDBid (pdbid) {
-                var xhrdesc = new XMLHttpRequest();
-                xhrdesc.open("GET", 'http://www.rcsb.org/pdb/rest/describePDB?structureId=' + pdbid, true);
-                xhrdesc.send();
 
-                xhrdesc.onreadystatechange = function() {
-                    if (xhrdesc.readyState === 4) {
-                        if (xhrdesc.status === 200) {
-                            var result = xhrdesc.responseXML;
-                          //  console.log(result);
-                            var pdbtag = result.getElementsByTagName("PDB");
-                            title = pdbtag[0].getAttribute('title');
-                            singleresult = '<li id="'+pdbid+'"><a class = "pdblink" id = "'+pdbid+'" href="http://www.rcsb.org/pdb/explore.do?structureId='+pdbid+'">'+pdbid+'  </a>'+title+'</li>';
-                            rcsbinfo = Y.one('.rcsbinfo');
-                            innerhtml = rcsbinfo.get('innerHTML');  
-                            rcsbinfo.set('innerHTML', innerhtml + singleresult);
-                            return title;
-                            
-                        } else {
-                            alert('XMLHttpRequest Failed');
-
-                        }
-                    }
-
-                };
-                }
-*/
                 function getTitleforPDBids (pdbids) {
                 var xhrdesc = new XMLHttpRequest();
                 //xhrdesc.open("GET", 'http://www.rcsb.org/pdb/rest/describePDB?structureId=' + pdbid, true);
                 xhrdesc.open("GET", 'http://www.rcsb.org/pdb/rest/customReport.csv?pdbids='+pdbids+'&customReportColumns=structureId,structureTitle,experimentalTechnique,publicationYear,journalName,pubmedId,title,experimentalTechnique&format=xml', true);
 
 
-//                xhrdesc.open("GET", 'http://www.rcsb.org/pdb/rest/customReport.csv?pdbids='+pdbids+'&customReportColumns=structureId,structureTitle,experimentalTechnique,pubmedId,title,publicationYear,authors,sequence&format=xml', true);
-
-
-                //console.log('http://www.rcsb.org/pdb/rest/customReport.csv?pdbids='+pdbids+'&customReportColumns=structureId,structureTitle,experimentalTechnique&format=xml')
                 xhrdesc.send();
 
                 xhrdesc.onreadystatechange = function() {
@@ -469,8 +412,8 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                             var result = xhrdesc.responseXML;
                             //console.log(result);
                             var records = result.getElementsByTagName("record");
-                            console.log(records);
-                            console.log(records.length);
+                            //console.log(records);
+                            //console.log(records.length);
                             innerhtml = '';
                            for (var i = 0; i < records.length; i++) {  
                             title = records[i].getElementsByTagName('dimStructure.structureTitle')[0].innerHTML;
@@ -523,7 +466,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                             //var res = result.split("\n");
                             resultcsv = result.replace(/(?:\r\n|\r|\n)/g, "\,");
                             totalhits = resultcsv.split("\,").length;
-                            console.log(resultcsv);
+                            //console.log(resultcsv);
                             //for (var i=0; i < res.length; i++){
                             var searchresults = '<div>';
 
@@ -540,7 +483,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                             pubchem.set('innerHTML', "<b>"+totalhits+" hits found!</b><br/>")
 
                             searchxml = getTitleforPDBids(resultcsv);
-                            console.log(searchxml);
+                            //console.log(searchxml);
 
                         } else {
                             alert('XMLHttpRequest Failed');
@@ -570,22 +513,42 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             var xhr = new XMLHttpRequest();
             var ext = "pdb";
             // file received/failed
+            var this_=this;
             xhr.onreadystatechange = (function() {
                 return function() {
                     if (xhr.readyState === 4) {
                         if (xhr.status === 200) {
-                            var resp = xhr.responseText;
-                            var start = resp.indexOf(
-                                "success<error>");
-                            if (start < 1) {
-                                return;
-                            }
+                            var resp = xhr.responseXML;
+                            x = resp.getElementsByTagName("error");
+                            //console.log(x[0].innerHTML);
+                            //inserthtml = 
+                             var wwwroot = M
+                                .cfg.wwwroot;
+                             var filesrc =
+                                wwwroot +
+                                '/draftfile.php/' +
+                                this_
+                                ._usercontextid +
+                                '/user/draft/' +
+                                this_
+                                ._itemid +
+                                '/' +
+                                x[0].innerHTML;
+                            content =
+                                '<a  href="' +
+                                filesrc +
+                                '" alt="PDB File Link"/>PDB LINK</a>';
+
+                            this_.get('host').insertContentAtFocusPoint(content);
+                            this_.markUpdated();
+
                         }
                     }
                 };
             })(this);
             var params = "datatype=uploadfile";
-            params += "&paramone=" + encodeURIComponent(filedata);
+//            params += "&paramone=" + encodeURIComponent(filedata);
+            params += "&paramone=" + filedata;
             params += "&paramtwo=" + ext;
             params += "&paramthree=image";
             params += "&requestid=" + filename;
@@ -612,31 +575,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             var dbselected = Y.one('[name=database]:checked').get('value');
 ////PUBCHEM code
 if (dbselected == 'pubchem') {
-/*
-        var form = this._form,
-            //url = form.one('.' + CSS.INPUTURL).get('value'),
-            searchtext = Y.one('.search').get('value'),
-            url = 'https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/PNG';
-            alt = searchtext,
-            margin = '',
-            customstyle = '',
-            classlist = [],
-            host = this.get('host');
 
-        e.preventDefault();
-
-        // Focus on the editor in preparation for inserting the image.
-        host.focus();
-        if (url !== '') {
-
-            var template = Y.Handlebars.compile(IMAGETEMPLATE);
-            imagehtml = template({
-                url: url,
-                alt: alt,
-                margin: margin,
-                customstyle: customstyle,
-                classlist: classlist.join(' ')
-            }); */
 
   searchtext = Y.one('.search').get('value');
             imagehtml = '<img src="https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/'+searchtext+'/PNG"/>' +
@@ -651,10 +590,10 @@ if (dbselected == 'pubchem') {
        ////RCSB code
        console.log("Insert RCSB Code into Page");
        inserthtml=Y.one('.rcsbdiv').get('innerHTML');
-       //console.log(inserthtml);
+       console.log(inserthtml);
 
        //ajax to save pdb in repo
-               // fileurl = "http://www.rcsb.org/pdb/files/4hhb.pdb.gz";
+               //fileurl = "http://www.rcsb.org/pdb/files/4hhb.pdb.gz";
                fileurl = "http://www.rcsb.org/pdb/files/4hhb.pdb";
                 //xhr.open("GET", "http://www.rcsb.org/pdb/rest/search", true);
                 //xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -668,86 +607,16 @@ if (dbselected == 'pubchem') {
                         if (xhr.status === 200) {
                         //got response so perform ajax to add file to repo
                             var filecontent = xhr.responseText;
-                            console.log(filecontent);
+                            //console.log(filecontent);
 
                             var options = host.get('filepickeroptions').image;
-                            console.log(host.get('filepickeroptions'));
-                            console.log(options);
+                            //console.log(host.get('filepickeroptions'));
+                            //console.log(options);
                             var savepath = (options.savepath === undefined) ? '/' : options.savepath;
-                            var filename = new Date().getTime();
-                            var thefilename = "4hhb"+filename+".pdb";
+                            //var filename = new Date().getTime();
+                            var filename = '';
+                            var thefilename = "4hhb"+filename;
                             this_._uploadFile(filecontent,"1",thefilename);
-                            //var formData = new FormData();
-                            //formData.append('repo_upload_file', filecontent);
-                            //formData.append('itemid', options.itemid);
-		            // List of repositories is an object rather than an array.  This makes iteration more awkward.
-                            /*
-		            var keys = Object.keys(options.repositories);
-		            for (var i=0; i<keys.length; i++) {
-		                if (options.repositories[keys[i]].type === 'upload') {
-		                    formData.append('repo_id', options.repositories[keys[i]].id);
-		                    break;
-		                }
-		            }
-		            formData.append('env', options.env);
-		            formData.append('sesskey', M.cfg.sesskey);
-		            formData.append('client_id', options.client_id);
-		            formData.append('savepath', savepath);
-                            formData.append('title', 'some title');
-		            formData.append('ctx_id', options.context.id);
-                            console.log(options.client_id);
-                            console.log(formData);
-                            var timestamp = new Date().getTime();
-                            var uploadid = 'moodleimage_' + Math.round(Math.random()*100000)+'-'+timestamp;   */
-                                /*
-				xhr.onreadystatechange = function() {
-				    if (xhr.readyState === 4) {
-				        var placeholder = self.editor.one('#' + uploadid);
-				        if (xhr.status === 200) {
-				            var result = JSON.parse(xhr.responseText);
-				            if (result) {
-				                if (result.error) {
-				                    if (placeholder) {
-				                        placeholder.remove(true);
-				                    }
-				                    return new M.core.ajaxException(result);
-				                }
-
-				                var file = result;
-				                if (result.event && result.event === 'fileexists') {
-				                    // A file with this name is already in use here - rename to avoid conflict.
-				                    // Chances are, it's a different image (stored in a different folder on the user's computer).
-				                    // If the user wants to reuse an existing image, they can copy/paste it within the editor.
-				                    file = result.newfile;
-				                }
-
-				                // Replace placeholder with actual image.
-				                var newhtml = template({
-				                    url: file.url,
-				                    presentation: true
-				                });
-				                var newimage = Y.Node.create(newhtml);
-				                if (placeholder) {
-				                    placeholder.replace(newimage);
-				                } else {
-				                    self.editor.appendChild(newimage);
-				                }
-				                self.markUpdated();
-				            }
-				        } else {
-				            alert(M.util.get_string('servererror', 'moodle'));
-				            if (placeholder) {
-				                placeholder.remove(true);
-				            }
-				        }
-				    }
-				};
-
-
-                            xhr.open("POST", M.cfg.wwwroot + '/repository/repository_ajax.php?action=upload', true);
-                            xhr.send(formData);
-                            */
-
 
                         }
                     }
@@ -756,11 +625,6 @@ if (dbselected == 'pubchem') {
                 xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
                 xhr.send(querytext);
 
-
-
-
-       this.get('host').insertContentAtFocusPoint(inserthtml);
-            this.markUpdated();
 }
 
         this.getDialogue({
