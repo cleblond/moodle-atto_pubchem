@@ -113,14 +113,15 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
             this._filename = timestamp;
             var host = this.get('host');
             var options = host.get('filepickeroptions');
-           if (options.image && options.image.itemid) {
+
+           //if (options.image && options.image.itemid) {
                 this._itemid = options.image.itemid;
-            } else {
-                Y.log(
-                    'Plugin PoodLL Anywhere not available because itemid is missing.',
-                    'warn', LOGNAME);
-                return;
-            }
+            //} else {
+            //    Y.log(
+            //        'Plugin PoodLL Anywhere not available because itemid is missing.',
+            //        'warn', LOGNAME);
+            //    return;
+            //}
 
 
             // If we don't have the capability to view then give up.
@@ -255,6 +256,9 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 		var id = target.get("id");
                 pdbid = id;
                 html = target.get("parentNode").get('innerHTML');
+
+                imghtml = '<img class="img-responsive" src="http://www.rcsb.org/pdb/images/'+pdbid+'_bio_r_500.jpg" height="350" width="350"></img>'
+
 		//Y.one('#pubchemdiv').get('childNodes').remove();
 		var length = Y.one('#rcsbdiv').get('children').size();
 		//console.log(Y.one('#pubchemdiv').get('children').size());
@@ -264,7 +268,8 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
 		Y.one('#rcsbdiv').get('children').slice(-1).item(0).remove();
 		}
 		//Y.one('#pubchemdiv').set('innerHTML',Y.one('#'+id));
-		Y.one('#rcsbdiv').insert('<div>'+html+'</div>');
+
+		Y.one('#rcsbdiv').insert('<div>'+html+imghtml+'</div>');
 
 
         },
@@ -407,13 +412,13 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                     if (xhrdesc.readyState === 4) {
                         if (xhrdesc.status === 200) {
                             var result = xhrdesc.responseXML;
-                            console.log(result);
+                            //console.log(result);
                             var records = result.getElementsByTagName("record");
-                            console.log(records);
+                            //console.log(records);
                             //console.log(records.length);
                             innerhtml = '';
                            for (var i = 0; i < records.length; i++) {
-                            console.log(i);
+                            //console.log(i);
                             title = records[i].getElementsByTagName('dimStructure.structureTitle')[0].innerHTML;
                             pdbids = records[i].getElementsByTagName('dimStructure.structureId')[0].innerHTML;
                             citationtitle = records[i].getElementsByTagName('dimStructure.title')[0].innerHTML;
@@ -424,12 +429,16 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                             //citationtitle = records[i].getElementsByTagName('dimStructure.title')[0].innerHTML;
                             //pdbid = records[i].getElementsByTagName('dimStructure.structureId')[0].innerHTML;
 
+                            //http://www.rcsb.org/pdb/images/4FU0_bio_r_500.jpg
+                            imghtml = '<img src="http://www.rcsb.org/pdb/images/'+pdbids+'_bio_r_500.jpg" height="150" width="150"></img>'
+
 
 
                             //console.log(title);
                             innerhtml += '<li><a class = "pdblink" id = "'+pdbids+'" href="http://www.rcsb.org/pdb/explore.do?structureId='+pdbids+'">'+pdbids+'  </a>'+title+'<ul><li>Title: '+citationtitle+'</li><li>Technique: '+technique+'</li><li>Journal: '+citationjournal+'</li><li>Year: '+citationyear+'</li><li>Link to PubMed: '+pubmedid+'</li></ul></li>';
                             
-                            //innerhtml = rcsbinfo.get('innerHTML');  
+                            //innerhtml = rcsbinfo.get('innerHTML');
+                            innerhtml=innerhtml+imghtml;  
                             
                            }
                            rcsbinfo = Y.one('.rcsbinfo');
@@ -507,7 +516,7 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
         },
 
 
-        _uploadFile: function(e, filedata, recid, filename) {
+        _uploadFile: function(filedata, filename) {
             var xhr = new XMLHttpRequest();
             var ext = "pdb";
             // file received/failed
@@ -535,11 +544,19 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                             content =
                                 '<a  href="' +
                                 filesrc +
-                                '" alt="PDB File Link">PDB LINK</a>';
+                                '" alt="PDB File Link">'+x[0].innerHTML+'</a>';
                             console.log(content);
-                            console.log(this_.get('host'));       
+                            //console.log(this_.get('host'));       
                             this_.get('host').insertContentAtFocusPoint(content);
                             this_.markUpdated();
+
+
+        /*this_.getDialogue({
+            focusAfterHide: null
+        }).hide();*/ 
+
+
+
 
                         }
                     }
@@ -623,7 +640,7 @@ if (dbselected == 'pubchem') {
                             //var filename = new Date().getTime();
                             var filename = '';
                             var thefilename = pdbid+filename;
-                            this_._uploadFile(filecontent,"1",thefilename);
+                            this_._uploadFile(filecontent, thefilename);
 
                         }
                     }
@@ -634,9 +651,9 @@ if (dbselected == 'pubchem') {
 
 }
 
-        this.getDialogue({
+     /*   this.getDialogue({
             focusAfterHide: null
-        }).hide();
+        }).hide(); */
 
     },
 
