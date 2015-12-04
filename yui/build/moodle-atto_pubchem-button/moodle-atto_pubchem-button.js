@@ -518,6 +518,8 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
         _uploadFile: function(filedata, filename) {
             var xhr = new XMLHttpRequest();
             var ext = "pdb";
+            host = this.get('host');
+            host.focus();
             // file received/failed
             var this_=this;
             xhr.onreadystatechange = (function() {
@@ -546,13 +548,9 @@ Y.namespace('M.atto_pubchem').Button = Y.Base.create('button', Y.M.editor_atto
                                 '" alt="PDB File Link">'+x[0].innerHTML+'</a>';
                             console.log(content);
                             //console.log(this_.get('host'));       
-                            this_.get('host').insertContentAtFocusPoint(content);
+                            host.insertContentAtFocusPoint(content);
                             this_.markUpdated();
-
-
-        /*this_.getDialogue({
-            focusAfterHide: null
-        }).hide();*/ 
+                            this_.getDialogue({focusAfterHide: null}).hide(); 
 
 
 
